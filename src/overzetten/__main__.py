@@ -94,8 +94,8 @@ class DTOMeta(type):
 
             # Instead of creating a new class, return the Pydantic model directly
             # but give it the name that was requested
-            pydantic_model.__name__ = name
-            pydantic_model.__qualname__ = name
+            pydantic_model.__name__ = model_name
+            pydantic_model.__qualname__ = model_name
 
             return pydantic_model
         else:
