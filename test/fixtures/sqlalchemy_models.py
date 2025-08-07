@@ -1,4 +1,3 @@
-
 from sqlalchemy import (
     create_engine,
     String,
@@ -10,15 +9,29 @@ from sqlalchemy import (
     Float,
     Numeric,
     LargeBinary,
+    JSON,
+    Text,
 )
+from sqlalchemy.dialects import postgresql, mysql
+import enum
+import uuid
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from typing import Optional, List
+from sqlalchemy import TypeDecorator
+from typing import Optional, List, Dict
 import datetime
 from decimal import Decimal
 from sqlalchemy import ForeignKey
 
 
 class Base(DeclarativeBase):
+    pass
+
+
+class PostgresBase(DeclarativeBase):
+    pass
+
+
+class MySQLBase(DeclarativeBase):
     pass
 
 
@@ -36,6 +49,11 @@ class User(Base):
     balance: Mapped[float] = mapped_column(Float)
     rating: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     data: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
+    preferences: Mapped[Optional[dict]] = mapped_column(JSON)
+    tags: Mapped[Optional[list]] = mapped_column(JSON)
+    uuid_field: Mapped[Optional[str]] = mapped_column(String(36))
+    secret_field: Mapped[Optional[str]] = mapped_column(Text)
+    json_field: Mapped[Optional[dict]] = mapped_column(JSON)
     addresses: Mapped[List["Address"]] = relationship(back_populates="user")
 
 
@@ -71,6 +89,7 @@ class NullableTestModel(Base):
     required_field: Mapped[str]
     nullable_field: Mapped[Optional[str]]
     already_optional_field: Mapped[Optional[int]]
+    nullable_email: Mapped[Optional[str]] = mapped_column(String)
 
 
 class DefaultValueTestModel(Base):
@@ -80,6 +99,23 @@ class DefaultValueTestModel(Base):
     scalar_default: Mapped[str] = mapped_column(default="default_value")
     callable_default: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now)
     required_field: Mapped[str]
+
+
+class RequiredFieldTestModel(Base):
+    __tablename__ = "required_field_test_model"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # Not nullable, no default = required
+    required_no_default: Mapped[str] = mapped_column(String)
+    # Nullable, no default = Optional[T] with None default
+    nullable_no_default: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # Not nullable, has default = T with default
+    required_with_default: Mapped[str] = mapped_column(String, default="default_value")
+    # Nullable, has default = Optional[T] with default
+    nullable_with_default: Mapped[Optional[str]] = mapped_column(String, nullable=True, default="nullable_default")
+    # Not nullable, has server_default = T with default
+    required_with_server_default: Mapped[str] = mapped_column(String, server_default="server_default_value")
+    # Boolean field with default
+    boolean_with_default: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class Employee(Base):
@@ -109,5 +145,84 @@ class Engineer(Employee):
     engineer_info: Mapped[str]
 
 
-engine = create_engine("sqlite:///:memory:")
-Base.metadata.create_all(engine)
+class CustomInt(TypeDecorator):
+    impl = Integer
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        return value * 10 if value is not None else None
+
+    def process_result_value(self, value, dialect):
+        return value // 10 if value is not None else None
+
+    @property
+    def python_type(self):
+        return int
+
+
+class CustomTypeModel(Base):
+    __tablename__ = "custom_type_test"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    custom_field: Mapped[int] = mapped_column(CustomInt)
+
+
+class MappedAnnotationTestModel(Base):
+    __tablename__ = "mapped_annotation_test"
+    __allow_unmapped__ = True
+    id: Mapped[int] = mapped_column(primary_key=True)
+    mapped_str: Mapped[str]
+    raw_str: str = mapped_column(String)
+
+
+class GenericMappedTestModel(Base):
+    __tablename__ = "generic_mapped_test"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    list_of_strings: Mapped[Optional[List[str]]] = mapped_column(JSON)
+    dict_of_int: Mapped[Optional[Dict[str, int]]] = mapped_column(JSON)
+
+
+class UnionLiteralTestModel(Base):
+    __tablename__ = "union_literal_test"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    status: Mapped[str] = mapped_column(String)
+    value: Mapped[int] = mapped_column(Integer)
+
+
+class SQLiteSpecificTypesModel(Base):
+    __tablename__ = "sqlite_types_model_test"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    # SQLite stores booleans as INTEGER (0 or 1)
+    boolean_as_int: Mapped[bool] = mapped_column(Integer)
+    # SQLite stores dates/times as TEXT
+    date_as_text: Mapped[datetime.date] = mapped_column(String)
+    time_as_text: Mapped[datetime.time] = mapped_column(String)
+    datetime_as_text: Mapped[datetime.datetime] = mapped_column(String)
+
+
+class MyEnum(enum.Enum):
+    ONE = "one"
+    TWO = "two"
+
+
+class PostgresSpecificTypesModel(PostgresBase):
+    __tablename__ = "postgres_specific_types"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    uuid_field: Mapped[uuid.UUID] = mapped_column(postgresql.UUID(as_uuid=True))
+    jsonb_field: Mapped[dict] = mapped_column(postgresql.JSONB)
+    array_field: Mapped[List[str]] = mapped_column(postgresql.ARRAY(String))
+    enum_field: Mapped[MyEnum] = mapped_column(postgresql.ENUM(MyEnum))
+
+
+class MySQLEnum(enum.Enum):
+    OPTION_A = "A"
+    OPTION_B = "B"
+
+
+class MySQLSpecificTypesModel(MySQLBase):
+    __tablename__ = "mysql_specific_types"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    year_field: Mapped[int] = mapped_column(mysql.YEAR)
+    set_field: Mapped[str] = mapped_column(mysql.SET("val1", "val2"))
+    enum_field: Mapped[MySQLEnum] = mapped_column(mysql.ENUM(MySQLEnum))
+
+

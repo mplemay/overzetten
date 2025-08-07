@@ -1,15 +1,16 @@
 
 import pytest
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict
 import datetime
 from decimal import Decimal
 
 from overzetten import DTO
-from test.fixtures.sqlalchemy_models import TypeConversionTestModel
+from test.fixtures.sqlalchemy_models import TypeConversionTestModel, CustomTypeModel, MappedAnnotationTestModel, GenericMappedTestModel, PostgresSpecificTypesModel, MyEnum, MySQLSpecificTypesModel, MySQLEnum
+import uuid
 
 
-def test_type_conversion():
+def test_type_conversion(db_engine):
     """Test conversion of all basic SQLAlchemy types."""
 
     class TypeConversionTestDTO(DTO[TypeConversionTestModel]):
@@ -27,3 +28,63 @@ def test_type_conversion():
     assert fields["float_field"].annotation == float
     assert fields["numeric_field"].annotation == Decimal
     assert fields["large_binary_field"].annotation == bytes
+
+
+def test_custom_sqlalchemy_type(db_engine):
+    """Test a custom SQLAlchemy type with python_type property."""
+
+    class CustomTypeDTO(DTO[CustomTypeModel]):
+        pass
+
+    fields = CustomTypeDTO.model_fields
+    assert fields["custom_field"].annotation == int
+
+
+def test_mapped_annotations_vs_raw_column_types(db_engine):
+    """Test handling of Mapped[T] annotations vs raw column types."""
+
+    class MappedAnnotationDTO(DTO[MappedAnnotationTestModel]):
+        pass
+
+    fields = MappedAnnotationDTO.model_fields
+    assert fields["mapped_str"].annotation == str
+    assert fields["raw_str"].annotation == str
+
+
+def test_generic_type_conversion(db_engine):
+    """Test type conversion with generic types (Mapped[List[str]], Mapped[Dict[str, int]])."""
+
+    class GenericMappedDTO(DTO[GenericMappedTestModel]):
+        pass
+
+    fields = GenericMappedDTO.model_fields
+    assert fields["list_of_strings"].annotation == Optional[List[str]]
+    assert fields["dict_of_int"].annotation == Optional[Dict[str, int]]
+
+
+def test_postgresql_specific_types(db_engine):
+    """Test PostgreSQL-specific types (UUID, JSONB, ARRAY, ENUM)."""
+
+    class PostgresSpecificTypesDTO(DTO[PostgresSpecificTypesModel]):
+        pass
+
+    fields = PostgresSpecificTypesDTO.model_fields
+    assert fields["uuid_field"].annotation == uuid.UUID
+    assert fields["jsonb_field"].annotation == dict
+    assert fields["array_field"].annotation == List[str]
+    assert fields["enum_field"].annotation == MyEnum
+
+
+def test_mysql_specific_types():
+    """Test MySQL-specific types (YEAR, SET, ENUM variations)."""
+
+    class MySQLSpecificTypesDTO(DTO[MySQLSpecificTypesModel]):
+        pass
+
+    fields = MySQLSpecificTypesDTO.model_fields
+    assert fields["year_field"].annotation == int
+    assert fields["set_field"].annotation == str
+    assert fields["enum_field"].annotation == MySQLEnum
+
+
+

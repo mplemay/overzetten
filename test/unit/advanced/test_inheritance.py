@@ -5,7 +5,7 @@ from overzetten import DTO
 from test.fixtures.sqlalchemy_models import Employee, Manager, Engineer
 
 
-def test_single_table_inheritance():
+def test_single_table_inheritance(db_engine):
     """Test DTO creation from models with single table inheritance."""
 
     class EmployeeDTO(DTO[Employee]):

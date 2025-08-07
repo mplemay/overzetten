@@ -1,4 +1,3 @@
-
 import pytest
 from pydantic import BaseModel
 from typing import Optional
@@ -9,7 +8,7 @@ from overzetten import DTO, DTOConfig
 from test.fixtures.sqlalchemy_models import User
 
 
-def test_basic_dto_creation():
+def test_basic_dto_creation(db_engine):
     """Test creating a basic DTO with no configuration."""
 
     class UserDTO(DTO[User]):
@@ -30,6 +29,11 @@ def test_basic_dto_creation():
         "balance",
         "rating",
         "data",
+        "preferences",
+        "tags",
+        "uuid_field",
+        "secret_field",
+        "json_field",
     ]
 
     # 2. Test that the returned class is actually a Pydantic model
@@ -46,11 +50,10 @@ def test_basic_dto_creation():
     assert fields["last_login"].annotation == datetime.time
     assert fields["balance"].annotation == float
     assert fields["rating"].annotation == Decimal
-    assert fields["rating"].annotation == Decimal
     assert fields["data"].annotation == Optional[bytes]
 
 
-def test_dto_naming_and_module():
+def test_dto_naming_and_module(db_engine):
     """Test that __name__, __qualname__, and __module__ are set correctly."""
 
     class UserDTO(DTO[User]):
@@ -61,7 +64,7 @@ def test_dto_naming_and_module():
     assert UserDTO.__module__ == __name__  # It should be the module where it's defined
 
 
-def test_multiple_dtos_from_same_model():
+def test_multiple_dtos_from_same_model(db_engine):
     """Test creating multiple DTOs from the same SQLAlchemy model with different configs."""
 
     class UserReadDTO(DTO[User]):

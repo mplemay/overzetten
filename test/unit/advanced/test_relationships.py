@@ -6,7 +6,7 @@ from overzetten import DTO, DTOConfig
 from test.fixtures.sqlalchemy_models import User, Address
 
 
-def test_one_to_many_relationship():
+def test_one_to_many_relationship(db_engine):
     """Test one-to-many relationship handling."""
 
     class AddressDTO(DTO[Address]):
