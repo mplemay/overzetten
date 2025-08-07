@@ -13,8 +13,10 @@ from typing import (
 from sqlalchemy.orm import MappedAsDataclass
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy import inspect
-from pydantic import BaseModel, ConfigDict, create_model
+from pydantic import BaseModel, ConfigDict, create_model, Field
+from pydantic.fields import FieldInfo
 from dataclasses import dataclass, field
+import collections.abc
 
 
 T = TypeVar("T", bound=MappedAsDataclass)
@@ -96,6 +98,7 @@ class DTOMeta(type):
             # but give it the name that was requested
             pydantic_model.__name__ = model_name
             pydantic_model.__qualname__ = model_name
+            pydantic_model.__module__ = namespace.get("__module__")
 
             return pydantic_model
         else:
@@ -178,7 +181,13 @@ class DTOMeta(type):
                 # Get default value
                 default_value = config.field_defaults.get(attr, None)
 
-                fields[rel_name] = (Optional[field_type], default_value)
+                # Handle collection vs. scalar relationships
+                if relationship.uselist:
+                    # For lists (one-to-many, many-to-many), the type is the list itself
+                    fields[rel_name] = (field_type, default_value or [])
+                else:
+                    # For scalar (many-to-one, one-to-one), it can be optional
+                    fields[rel_name] = (Optional[field_type], default_value)
 
         return fields
 
@@ -200,7 +209,14 @@ class DTOMeta(type):
         """Get the Pydantic field type for a SQLAlchemy column."""
         # Check if field has custom mapping
         if attr in config.mapped:
-            field_type = config.mapped[attr]
+            mapped_value = config.mapped[attr]
+            # If the mapped value is a FieldInfo (like from Field()),
+            # the type is the python_type of the column, and the FieldInfo
+            # is handled as a default value.
+            if isinstance(mapped_value, FieldInfo):
+                field_type = column.type.python_type
+            else:
+                field_type = mapped_value
         else:
             # Convert SQLAlchemy type to Python type
             field_type = column.type.python_type
@@ -216,16 +232,23 @@ class DTOMeta(type):
         attr: InstrumentedAttribute, column, config: DTOConfig
     ) -> Any:
         """Get the default value for a field."""
-        # Check custom defaults first
+        # Check for a mapped Field() object first
+        if attr in config.mapped:
+            mapped_value = config.mapped[attr]
+            if isinstance(mapped_value, FieldInfo):
+                return mapped_value
+
+        # Check custom defaults
         if attr in config.field_defaults:
             return config.field_defaults[attr]
 
         # Use SQLAlchemy column default
         if column.default is not None:
-            if hasattr(column.default, "arg"):
-                return column.default.arg
+            if isinstance(column.default.arg, collections.abc.Callable):
+                # For callable defaults, Pydantic needs a Field with a default_factory
+                return Field(default_factory=column.default.arg)
             else:
-                return ...  # Required field
+                return column.default.arg
         elif column.nullable:
             return None
         else:
