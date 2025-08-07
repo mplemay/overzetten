@@ -10,7 +10,7 @@ from typing import (
     TypeVar,
     Generic,
 )
-from sqlalchemy.orm import MappedAsDataclass
+from sqlalchemy.orm import MappedAsDataclass, Mapped
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy import inspect
 from pydantic import BaseModel, ConfigDict, create_model, Field
@@ -156,7 +156,7 @@ class DTOMeta(type):
                 continue
 
             # Get field type
-            field_type = DTOMeta._get_field_type(attr, column, config)
+            field_type = DTOMeta._get_field_type(sqlalchemy_model, attr, column, config)
 
             # Get default value
             default_value = DTOMeta._get_field_default(attr, column, config)
@@ -205,7 +205,12 @@ class DTOMeta(type):
         return True
 
     @staticmethod
-    def _get_field_type(attr: InstrumentedAttribute, column, config: DTOConfig) -> Type:
+    def _get_field_type(
+        sqlalchemy_model: Type[MappedAsDataclass],
+        attr: InstrumentedAttribute,
+        column,
+        config: DTOConfig,
+    ) -> Type:
         """Get the Pydantic field type for a SQLAlchemy column."""
         # Check if field has custom mapping
         if attr in config.mapped:
@@ -218,8 +223,24 @@ class DTOMeta(type):
             else:
                 field_type = mapped_value
         else:
-            # Convert SQLAlchemy type to Python type
-            field_type = column.type.python_type
+            # Try to get the type from the Mapped annotation first
+            if (
+                hasattr(sqlalchemy_model, "__annotations__")
+                and attr.key in sqlalchemy_model.__annotations__
+            ):
+                mapped_annotation = sqlalchemy_model.__annotations__[attr.key]
+                # Extract the inner type from Mapped[T]
+                if get_origin(mapped_annotation) is Mapped:
+                    mapped_args = get_args(mapped_annotation)
+                    if mapped_args:
+                        field_type = mapped_args[0]
+                    else:
+                        field_type = column.type.python_type
+                else:
+                    field_type = mapped_annotation
+            else:
+                # Fallback to SQLAlchemy's python_type
+                field_type = column.type.python_type
 
         # Handle nullable columns
         if column.nullable and not DTOMeta._is_optional_type(field_type):
