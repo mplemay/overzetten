@@ -45,10 +45,11 @@ def test_excluding_and_including_same_field():
 
 def test_invalid_type_mapping_non_type_object():
     """Test that mapping to a non-type object raises an appropriate error."""
-    with pytest.raises(PydanticUndefinedAnnotation):
+    class InvalidMappedDTO(DTO[User]):
+        config = DTOConfig(mapped={User.name: "not_a_type"})
 
-        class InvalidMappedDTO(DTO[User]):
-            config = DTOConfig(mapped={User.name: "not_a_type"})
+    with pytest.raises(PydanticUndefinedAnnotation):
+        InvalidMappedDTO.model_rebuild()
 
 
 def test_mapping_to_incompatible_type():

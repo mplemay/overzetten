@@ -58,7 +58,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
   - ~`Union` types, `Literal` types~
   - ~Custom Pydantic models as field types~
 - ~Test mapping relationships to other DTO types.~
-- Test circular mapping references.
+- ~Test circular mapping references.~
 - ~**New:** Test mapping same field to different types in different DTOs.~
 - ~**New:** Test mapping fields that don't exist in SQLAlchemy model (should error).~
 - ~Test mapping with inheritance (parent class mappings).~
@@ -86,9 +86,9 @@ This document outlines a comprehensive testing plan for the `overzetten` library
   - ~`model_name` override~
   - ~`model_name_prefix` + `model_name_suffix`~
   - ~Default naming patterns~
-- **New:** Test name conflicts and resolution.
-- **New:** Test very long names (edge case).
-- **New:** Test names with special characters.
+- ~**New:** Test name conflicts and resolution.~
+- ~**New:** Test very long names (edge case).~
+- ~**New:** Test names with special characters.~
 - ~**New:** Test that naming doesn't affect functionality.~
 
 ## 3. Default Values and Required Fields (Enhanced)
@@ -127,7 +127,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
   - ~Test inherited field exclusion/mapping.~
 - ~Joined Table Inheritance:~
   - ~Test field distribution across tables.~
-  - Test foreign key relationships between parent/child.
+  - ~Test foreign key relationships between parent/child.~
 - ~Concrete Table Inheritance:~
   - ~Test independent table DTOs.~
 - ~Mixin Classes:~

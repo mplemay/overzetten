@@ -100,7 +100,9 @@ class DTOMeta(type):
             pydantic_model.__name__ = model_name
             pydantic_model.__qualname__ = model_name
             pydantic_model.__module__ = namespace.get("__module__")
-            pydantic_model.model_rebuild()
+            
+
+            
 
             return pydantic_model
         else:

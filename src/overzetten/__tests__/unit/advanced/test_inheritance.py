@@ -166,3 +166,14 @@ def test_concrete_table_inheritance_dtos():
     # In concrete table inheritance, child tables have all columns, including those from the base.
     child_fields = ConcreteTableChildDTO.model_fields
     assert list(child_fields.keys()) == ["id", "base_data", "child_data"]
+
+def test_joined_table_inheritance_foreign_key():
+    """Test that the foreign key in joined table inheritance is handled correctly."""
+
+    class ChildMappedDTO(DTO[ChildMappedModel]):
+        pass
+
+    # The foreign key column (id) should be present and correctly typed
+    child_fields = ChildMappedDTO.model_fields
+    assert "id" in child_fields
+    assert child_fields["id"].annotation is int
