@@ -68,6 +68,18 @@ def test_required_with_server_default(db_engine):
     )  # Pydantic default is None if not explicitly set
 
 
+def test_nullable_with_server_default(db_engine):
+    """Test that nullable fields with a server_default become Optional[T] with None default."""
+
+    class NullableServerDefaultDTO(DTO[RequiredFieldTestModel]):
+        pass
+
+    fields = NullableServerDefaultDTO.model_fields
+    assert not fields["nullable_with_server_default"].is_required()
+    assert fields["nullable_with_server_default"].annotation == Optional[str]
+    assert fields["nullable_with_server_default"].default is None
+
+
 def test_boolean_with_default(db_engine):
     """Test boolean fields with a default value."""
 

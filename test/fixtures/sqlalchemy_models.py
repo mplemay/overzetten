@@ -11,6 +11,8 @@ from sqlalchemy import (
     LargeBinary,
     JSON,
     Text,
+    ForeignKey,
+    case,
 )
 from sqlalchemy.dialects import postgresql, mysql
 import enum
@@ -20,7 +22,7 @@ from sqlalchemy import TypeDecorator
 from typing import Optional, List, Dict
 import datetime
 from decimal import Decimal
-from sqlalchemy import ForeignKey
+from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class Base(DeclarativeBase):
@@ -55,6 +57,19 @@ class User(Base):
     secret_field: Mapped[Optional[str]] = mapped_column(Text)
     json_field: Mapped[Optional[dict]] = mapped_column(JSON)
     addresses: Mapped[List["Address"]] = relationship(back_populates="user")
+
+    @hybrid_property
+    def full_name(self):
+        if self.fullname:
+            return f"{self.name} {self.fullname}"
+        return self.name
+
+    @full_name.expression
+    def full_name(cls):
+        return case(
+            (cls.fullname != None, cls.name + " " + cls.fullname),
+            else_=cls.name
+        )
 
 
 class Address(Base):
@@ -99,6 +114,7 @@ class DefaultValueTestModel(Base):
     scalar_default: Mapped[str] = mapped_column(default="default_value")
     callable_default: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now)
     required_field: Mapped[str]
+    server_default_field: Mapped[str] = mapped_column(server_default="server_default_value")
 
 
 class RequiredFieldTestModel(Base):
@@ -116,6 +132,58 @@ class RequiredFieldTestModel(Base):
     required_with_server_default: Mapped[str] = mapped_column(String, server_default="server_default_value")
     # Boolean field with default
     boolean_with_default: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Nullable, has server_default = Optional[T] with None default (from Pydantic perspective)
+    nullable_with_server_default: Mapped[Optional[str]] = mapped_column(String, nullable=True, server_default="nullable_server_default")
+
+
+class Node(Base):
+    __tablename__ = "nodes"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    # Self-referential relationship
+    parent_node_id: Mapped[Optional[int]] = mapped_column(ForeignKey("nodes.id"))
+    parent_node: Mapped[Optional["Node"]] = relationship(
+        back_populates="child_nodes", remote_side=[id]
+    )
+    child_nodes: Mapped[List["Node"]] = relationship(back_populates="parent_node")
+
+
+class BaseMappedModel(Base):
+    __tablename__ = "base_mapped_model"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    base_field: Mapped[str]
+    common_field: Mapped[str]
+
+
+class ChildMappedModel(BaseMappedModel):
+    __tablename__ = "child_mapped_model"
+    id: Mapped[int] = mapped_column(ForeignKey("base_mapped_model.id"), primary_key=True)
+    child_field: Mapped[str]
+    common_field: Mapped[str]
+
+
+class TimestampMixin:
+    created_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now)
+    updated_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now, onupdate=datetime.datetime.now)
+
+
+class Product(TimestampMixin, Base):
+    __tablename__ = "products"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    description: Mapped[Optional[str]]
+
+
+class AbstractBaseModel(Base):
+    __abstract__ = True
+    id: Mapped[int] = mapped_column(primary_key=True)
+    abstract_field: Mapped[str]
+
+
+class ConcreteModel(AbstractBaseModel):
+    __tablename__ = "concrete_model"
+    concrete_field: Mapped[str]
+
 
 
 class Employee(Base):

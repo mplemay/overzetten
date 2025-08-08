@@ -3,7 +3,7 @@ import pytest
 import datetime
 
 from overzetten import DTO, DTOConfig
-from test.fixtures.sqlalchemy_models import DefaultValueTestModel
+from test.fixtures.sqlalchemy_models import DefaultValueTestModel, User
 
 
 def test_default_values_and_required_fields(db_engine):
@@ -42,3 +42,32 @@ def test_custom_defaults(db_engine):
 
     # Test setting defaults for required fields
     assert fields["required_field"].default == "custom_default"
+
+
+def test_server_default(db_engine):
+    """Test handling of server_default."""
+
+    class ServerDefaultDTO(DTO[DefaultValueTestModel]):
+        pass
+
+    fields = ServerDefaultDTO.model_fields
+
+    # Fields with server_default are not required in Pydantic
+    assert not fields["server_default_field"].is_required()
+    # Pydantic default is None if not explicitly set by overzetten
+    assert fields["server_default_field"].default is None
+
+
+def test_defaults_for_excluded_fields_ignored(db_engine):
+    """Test that field_defaults for excluded fields are ignored."""
+
+    class UserExcludedWithDefaultDTO(DTO[User]):
+        config = DTOConfig(
+            exclude={User.name},
+            field_defaults={User.name: "should_be_ignored"}
+        )
+
+    fields = UserExcludedWithDefaultDTO.model_fields
+
+    # The field should not be present at all
+    assert "name" not in fields

@@ -9,6 +9,8 @@ from typing import (
     Union,
     TypeVar,
     Generic,
+    Annotated,
+    Tuple,
 )
 from sqlalchemy.orm import MappedAsDataclass, Mapped
 from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -99,6 +101,7 @@ class DTOMeta(type):
             pydantic_model.__name__ = model_name
             pydantic_model.__qualname__ = model_name
             pydantic_model.__module__ = namespace.get("__module__")
+            pydantic_model.model_rebuild()
 
             return pydantic_model
         else:
@@ -145,6 +148,8 @@ class DTOMeta(type):
         fields = {}
 
         # Get SQLAlchemy inspector
+        if not hasattr(sqlalchemy_model, '__table__'):
+            raise TypeError(f"Cannot create DTO from abstract or unmapped SQLAlchemy model '{sqlalchemy_model.__name__}'.")
         inspector = inspect(sqlalchemy_model)
 
         # Process each column
@@ -162,6 +167,14 @@ class DTOMeta(type):
             default_value = DTOMeta._get_field_default(attr, column, config)
 
             fields[column_name] = (field_type, default_value)
+
+        # Validate mapped fields that are not columns
+        for mapped_attr, _ in config.mapped.items():
+            if isinstance(mapped_attr, InstrumentedAttribute) and not hasattr(sqlalchemy_model, mapped_attr.key):
+                raise ValueError(
+                    f"Mapped attribute '{mapped_attr.key}' does not exist on SQLAlchemy model "
+                    f"'{sqlalchemy_model.__name__}'."
+                )
 
         # Process relationships if enabled
         if config.include_relationships:
@@ -204,6 +217,69 @@ class DTOMeta(type):
 
         return True
 
+    def _extract_fields(
+        sqlalchemy_model: Type[MappedAsDataclass], config: DTOConfig
+    ) -> Dict[str, Any]:
+        """Extract fields from SQLAlchemy model and convert to Pydantic format."""
+        fields = {}
+
+        # Get SQLAlchemy inspector
+        if not hasattr(sqlalchemy_model, '__table__'):
+            raise TypeError(f"Cannot create DTO from abstract or unmapped SQLAlchemy model '{sqlalchemy_model.__name__}'.")
+        inspector = inspect(sqlalchemy_model)
+
+        # Process each column
+        for column_name, column in inspector.columns.items():
+            attr = getattr(sqlalchemy_model, column_name)
+
+            # Apply include/exclude logic
+            if not DTOMeta._should_include_field(attr, config):
+                continue
+
+            # Get field type
+            field_type = DTOMeta._get_field_type(sqlalchemy_model, attr, column, config)
+
+            # Get default value
+            default_value = DTOMeta._get_field_default(attr, column, config)
+
+            fields[column_name] = (field_type, default_value)
+
+        # Validate mapped fields that are not columns
+        for mapped_attr, _ in config.mapped.items():
+            if isinstance(mapped_attr, InstrumentedAttribute) and not hasattr(sqlalchemy_model, mapped_attr.key):
+                raise ValueError(
+                    f"Mapped attribute '{mapped_attr.key}' does not exist on SQLAlchemy model "
+                    f"'{sqlalchemy_model.__name__}'."
+                )
+
+        # Process relationships if enabled
+        if config.include_relationships:
+            for rel_name, relationship in inspector.relationships.items():
+                attr = getattr(sqlalchemy_model, rel_name)
+
+                if not DTOMeta._should_include_field(attr, config):
+                    continue
+
+                # Check if relationship has custom mapping
+                if attr in config.mapped:
+                    field_type = DTOMeta._get_field_type(sqlalchemy_model, attr, None, config) # Pass None for column as it's a relationship
+                else:
+                    # Default to Any for relationships without explicit mapping
+                    field_type = Any
+
+                # Get default value
+                default_value = DTOMeta._get_field_default(attr, None, config) # Pass None for column as it's a relationship
+
+                # Handle collection vs. scalar relationships
+                if relationship.uselist:
+                    # For lists (one-to-many, many-to-many), the type is the list itself
+                    fields[rel_name] = (field_type, default_value or [])
+                else:
+                    # For scalar (many-to-one, one-to-one), it can be optional
+                    fields[rel_name] = (Optional[field_type], default_value)
+
+        return fields
+
     @staticmethod
     def _get_field_type(
         sqlalchemy_model: Type[MappedAsDataclass],
@@ -243,7 +319,7 @@ class DTOMeta(type):
                 field_type = column.type.python_type
 
         # Handle nullable columns
-        if column.nullable and not DTOMeta._is_optional_type(field_type):
+        if column is not None and column.nullable and not DTOMeta._is_optional_type(field_type):
             field_type = Optional[field_type]
 
         return field_type

@@ -1,4 +1,3 @@
-
 import pytest
 from pydantic import BaseModel
 from typing import Optional, List, Dict
@@ -6,7 +5,7 @@ import datetime
 from decimal import Decimal
 
 from overzetten import DTO
-from test.fixtures.sqlalchemy_models import TypeConversionTestModel, CustomTypeModel, MappedAnnotationTestModel, GenericMappedTestModel, PostgresSpecificTypesModel, MyEnum, MySQLSpecificTypesModel, MySQLEnum
+from test.fixtures.sqlalchemy_models import TypeConversionTestModel, CustomTypeModel, MappedAnnotationTestModel, GenericMappedTestModel, PostgresSpecificTypesModel, MyEnum, MySQLSpecificTypesModel, MySQLEnum, SQLiteSpecificTypesModel
 import uuid
 
 
@@ -87,4 +86,14 @@ def test_mysql_specific_types():
     assert fields["enum_field"].annotation == MySQLEnum
 
 
+def test_sqlite_specific_types(db_engine):
+    """Test SQLite-specific types (boolean as int, date/time as text)."""
 
+    class SQLiteSpecificTypesDTO(DTO[SQLiteSpecificTypesModel]):
+        pass
+
+    fields = SQLiteSpecificTypesDTO.model_fields
+    assert fields["boolean_as_int"].annotation == bool
+    assert fields["date_as_text"].annotation == datetime.date
+    assert fields["time_as_text"].annotation == datetime.time
+    assert fields["datetime_as_text"].annotation == datetime.datetime
