@@ -22,7 +22,7 @@ import collections.abc
 T = TypeVar("T", bound=MappedAsDataclass)
 
 
-@dataclass
+@dataclass(frozen=True, slots=True, kw_only=True)
 class DTOConfig:
     """Configuration for DTO generation."""
 
