@@ -1,5 +1,4 @@
 from sqlalchemy import (
-    create_engine,
     String,
     Integer,
     Boolean,
@@ -67,8 +66,7 @@ class User(Base):
     @full_name.expression
     def full_name(cls):
         return case(
-            (cls.fullname != None, cls.name + " " + cls.fullname),
-            else_=cls.name
+            (cls.fullname is not None, cls.name + " " + cls.fullname), else_=cls.name
         )
 
 
@@ -112,9 +110,13 @@ class DefaultValueTestModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     scalar_default: Mapped[str] = mapped_column(default="default_value")
-    callable_default: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now)
+    callable_default: Mapped[datetime.datetime] = mapped_column(
+        default=datetime.datetime.now
+    )
     required_field: Mapped[str]
-    server_default_field: Mapped[str] = mapped_column(server_default="server_default_value")
+    server_default_field: Mapped[str] = mapped_column(
+        server_default="server_default_value"
+    )
 
 
 class RequiredFieldTestModel(Base):
@@ -127,13 +129,19 @@ class RequiredFieldTestModel(Base):
     # Not nullable, has default = T with default
     required_with_default: Mapped[str] = mapped_column(String, default="default_value")
     # Nullable, has default = Optional[T] with default
-    nullable_with_default: Mapped[Optional[str]] = mapped_column(String, nullable=True, default="nullable_default")
+    nullable_with_default: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, default="nullable_default"
+    )
     # Not nullable, has server_default = T with default
-    required_with_server_default: Mapped[str] = mapped_column(String, server_default="server_default_value")
+    required_with_server_default: Mapped[str] = mapped_column(
+        String, server_default="server_default_value"
+    )
     # Boolean field with default
     boolean_with_default: Mapped[bool] = mapped_column(Boolean, default=False)
     # Nullable, has server_default = Optional[T] with None default (from Pydantic perspective)
-    nullable_with_server_default: Mapped[Optional[str]] = mapped_column(String, nullable=True, server_default="nullable_server_default")
+    nullable_with_server_default: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, server_default="nullable_server_default"
+    )
 
 
 class Node(Base):
@@ -157,14 +165,18 @@ class BaseMappedModel(Base):
 
 class ChildMappedModel(BaseMappedModel):
     __tablename__ = "child_mapped_model"
-    id: Mapped[int] = mapped_column(ForeignKey("base_mapped_model.id"), primary_key=True)
+    id: Mapped[int] = mapped_column(
+        ForeignKey("base_mapped_model.id"), primary_key=True
+    )
     child_field: Mapped[str]
     common_field: Mapped[str]
 
 
 class TimestampMixin:
     created_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now)
-    updated_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now, onupdate=datetime.datetime.now)
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        default=datetime.datetime.now, onupdate=datetime.datetime.now
+    )
 
 
 class Product(TimestampMixin, Base):
@@ -183,7 +195,6 @@ class AbstractBaseModel(Base):
 class ConcreteModel(AbstractBaseModel):
     __tablename__ = "concrete_model"
     concrete_field: Mapped[str]
-
 
 
 class Employee(Base):
@@ -292,5 +303,3 @@ class MySQLSpecificTypesModel(MySQLBase):
     year_field: Mapped[int] = mapped_column(mysql.YEAR)
     set_field: Mapped[str] = mapped_column(mysql.SET("val1", "val2"))
     enum_field: Mapped[MySQLEnum] = mapped_column(mysql.ENUM(MySQLEnum))
-
-
