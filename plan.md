@@ -33,7 +33,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 - ~**New:** Test custom SQLAlchemy types with `python_type` property.~
 - ~Test handling of `Mapped[T]` annotations vs raw column types.~
 - ~**New:** Test type conversion with generic types (`Mapped[List[str]]`, `Mapped[Dict[str, int]]`).~
-- **New:** Test handling of types that don't have direct Python equivalents.
+- ~**New:** Test handling of types that don't have direct Python equivalents.~
 
 ### Nullable Field Handling (Enhanced)
 - ~Test that nullable fields become `Optional[T]` correctly.~
@@ -41,7 +41,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 - ~Test mixed nullable and non-nullable fields in same model.~
 - ~**New:** Test that `Optional[T]` fields aren't double-wrapped as `Optional[Optional[T]]`.~
 - ~**New:** Test nullable fields with custom type mappings (nullable + `EmailStr` → `Optional[EmailStr]`).~
-- **New:** Test server-side nullable vs Python-side nullable handling.
+- ~**New:** Test server-side nullable vs Python-side nullable handling.~
 
 ## 2. Configuration Tests (Significantly Enhanced)
 
@@ -57,16 +57,16 @@ This document outlines a comprehensive testing plan for the `overzetten` library
     - ~`List[CustomType]`, `Dict[str, CustomType]`~
     - ~`Union` types, `Literal` types~
     - ~Custom Pydantic models as field types~
-- **New:** Test mapping relationships to other DTO types.
-- **New:** Test circular mapping references.
+- Test mapping relationships to other DTO types.
+- Test circular mapping references.
 - ~**New:** Test mapping same field to different types in different DTOs.~
 - ~**New:** Test mapping fields that don't exist in SQLAlchemy model (should error).~
-- **New:** Test mapping with inheritance (parent class mappings).
+- Test mapping with inheritance (parent class mappings).
 
 ### Field Exclusion (`exclude` parameter) (Enhanced)
 - ~Test excluding various field types (columns, relationships, hybrids).~
-- Test excluding inherited fields from parent models.
-- Test excluding fields with foreign key constraints.
+- ~Test excluding inherited fields from parent models.~
+- ~Test excluding fields with foreign key constraints.~
 - ~**New:** Test excluding fields that are referenced in `mapped` (should take precedence).~
 - ~**New:** Test excluding all fields except one (edge case).~
 - ~**New:** Test excluding computed/hybrid properties.~
@@ -75,7 +75,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 **Test Suite:** `test_field_inclusion.py`
 - ~Test including only specific subset of fields.~
 - ~Test that `exclude` takes precedence over `include`.~
-- ~Test including relationships vs columns.~
+- Test including relationships vs columns.
 - Test including inherited fields selectively.
 - ~Test empty `include` set behavior.~
 - ~Test `include` with `mapped` combinations.~
@@ -108,14 +108,14 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 - ~Test overriding SQLAlchemy defaults.~
 - ~Test setting defaults for required fields.~
 - ~Test defaults for excluded fields (should be ignored).~
-- Test callable vs static defaults.
+- ~Test callable vs static defaults.~
 - Test defaults that don't match field types (should validate).
 
 ### Required Field Logic (New Section)
 - ~Test logic: not nullable and no default = required.~
 - ~Test logic: nullable and no default = `Optional` with `None` default.~
 - ~Test logic: not nullable but has default = `T` with default.~
-- ~Test interaction with custom `field_defaults`.
+- ~Test interaction with custom `field_defaults`.~
 
 ## 4. Inheritance and Relationships (Major Enhancement)
 
@@ -125,15 +125,15 @@ This document outlines a comprehensive testing plan for the `overzetten` library
     - ~Test parent and child DTOs.~
     - Test discriminator column handling.
     - Test inherited field exclusion/mapping.
-- Joined Table Inheritance:
+- ~Joined Table Inheritance:~
     - ~Test field distribution across tables.~
     - Test foreign key relationships between parent/child.
 - Concrete Table Inheritance:
     - Test independent table DTOs.
-- Mixin Classes:
+- ~Mixin Classes:~
     - ~Test DTOs from models with mixins.~
     - Test mixin field inheritance.
-- Abstract Base Classes:
+- ~Abstract Base Classes:~
     - ~Test that abstract models can't create DTOs directly.~
 
 ### Relationships (Comprehensive New Section)
@@ -148,7 +148,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 - Many-to-Many:
     - Test association table handling.
     - Test through-model relationships.
-- Self-Referential:
+- ~Self-Referential:~
     - ~Test tree structures, hierarchical data.~
 - Advanced Relationship Options:
     - `back_populates`, `backref` handling.
@@ -192,7 +192,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
     - Models without `__tablename__`.
     - Models with `__abstract__ = True`.
 - Configuration Conflicts:
-    - Mapping non-existent fields.
+    - ~Mapping non-existent fields.~
     - Excluding and including same field.
     - Invalid type mappings (non-type objects).
 - Type System Issues:
@@ -201,7 +201,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 
 ### Complex SQLAlchemy Features (New Section)
 **Test Suite:** `test_complex_sqlalchemy.py`
-- Hybrid Properties: Test inclusion/exclusion, type detection.
+- Hybrid Properties: ~Test inclusion/exclusion, type detection.~
 - Association Objects: Test many-to-many through objects.
 - Synonyms: Test field aliasing.
 - Column Properties: Test computed columns, SQL expressions.
