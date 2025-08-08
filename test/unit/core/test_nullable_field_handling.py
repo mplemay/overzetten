@@ -13,9 +13,9 @@ def test_nullable_field_handling():
 
     fields = NullableTestDTO.model_fields
 
-    assert fields["required_field"].annotation == str
-    assert fields["nullable_field"].annotation == Optional[str]
-    assert fields["already_optional_field"].annotation == Optional[int]
+    assert fields["required_field"].annotation is str
+    assert fields["nullable_field"].annotation is Optional[str]
+    assert fields["already_optional_field"].annotation is Optional[int]
 
 
 def test_no_double_optional_wrapping():
@@ -26,7 +26,7 @@ def test_no_double_optional_wrapping():
 
     fields = NullableTestDTO.model_fields
     # The type should be Optional[int], not Optional[Optional[int]]
-    assert fields["already_optional_field"].annotation == Optional[int]
+    assert fields["already_optional_field"].annotation is Optional[int]
     assert str(fields["already_optional_field"].annotation).startswith(
         "typing.Optional[int"
     )
@@ -39,4 +39,4 @@ def test_nullable_field_with_custom_type_mapping():
         config = DTOConfig(mapped={NullableTestModel.nullable_email: EmailStr})
 
     fields = NullableEmailDTO.model_fields
-    assert fields["nullable_email"].annotation == Optional[EmailStr]
+    assert fields["nullable_email"].annotation is Optional[EmailStr]

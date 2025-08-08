@@ -21,8 +21,8 @@ def test_field_mapping_to_pydantic_types():
         )
 
     fields = UserMappedDTO.model_fields
-    assert fields["name"].annotation == EmailStr
-    assert fields["fullname"].annotation == Optional[HttpUrl]
+    assert fields["name"].annotation is EmailStr
+    assert fields["fullname"].annotation is Optional[HttpUrl]
 
 
 def test_field_mapping_with_field_constraints():
@@ -54,8 +54,8 @@ def test_field_mapping_to_complex_types():
         )
 
     fields = UserComplexMapDTO.model_fields
-    assert fields["preferences"].annotation == Optional[Dict[str, Union[int, str]]]
-    assert fields["tags"].annotation == Optional[List[str]]
+    assert fields["preferences"].annotation is Optional[Dict[str, Union[int, str]]]
+    assert fields["tags"].annotation is Optional[List[str]]
 
 
 def test_field_mapping_to_specific_pydantic_types():
@@ -71,9 +71,9 @@ def test_field_mapping_to_specific_pydantic_types():
         )
 
     fields = UserSpecificMappedDTO.model_fields
-    assert fields["uuid_field"].annotation == Optional[uuid.UUID]
-    assert fields["secret_field"].annotation == Optional[SecretStr]
-    assert fields["json_field"].annotation == Optional[Json]
+    assert fields["uuid_field"].annotation is Optional[uuid.UUID]
+    assert fields["secret_field"].annotation is Optional[SecretStr]
+    assert fields["json_field"].annotation is Optional[Json]
 
 
 def test_field_mapping_to_union_literal_and_custom_pydantic_models():
@@ -93,8 +93,8 @@ def test_field_mapping_to_union_literal_and_custom_pydantic_models():
         )
 
     fields = UnionLiteralMappedDTO.model_fields
-    assert fields["status"].annotation == Union[Literal["active"], Literal["inactive"]]
-    assert fields["value"].annotation == CustomPydanticModel
+    assert fields["status"].annotation is Union[Literal["active"], Literal["inactive"]]
+    assert fields["value"].annotation is CustomPydanticModel
 
 
 def test_mapping_same_field_to_different_types():
@@ -107,10 +107,10 @@ def test_mapping_same_field_to_different_types():
         config = DTOConfig(mapped={User.name: EmailStr})
 
     # Verify the name field in the first DTO
-    assert UserDTOMappedNameStr.model_fields["name"].annotation == str
+    assert UserDTOMappedNameStr.model_fields["name"].annotation is str
 
     # Verify the name field in the second DTO
-    assert UserDTOMappedNameEmail.model_fields["name"].annotation == EmailStr
+    assert UserDTOMappedNameEmail.model_fields["name"].annotation is EmailStr
 
 
 def test_mapping_non_existent_field_errors():
@@ -143,7 +143,7 @@ def test_annotated_types_with_metadata():
         )
 
     fields = UserAnnotatedDTO.model_fields
-    assert fields["name"].annotation == str
+    assert fields["name"].annotation is str
     assert any(
         isinstance(m, FieldInfo) and getattr(m, "min_length", None) == 5
         for m in fields["name"].metadata

@@ -39,17 +39,17 @@ def test_basic_dto_creation():
     assert issubclass(UserDTO, BaseModel)
 
     # 3. Test that the field types are correct
-    assert fields["id"].annotation == int
-    assert fields["name"].annotation == str
-    assert fields["fullname"].annotation == Optional[str]
-    assert fields["age"].annotation == int
-    assert fields["is_active"].annotation == bool
-    assert fields["created_at"].annotation == datetime.datetime
-    assert fields["registered_on"].annotation == datetime.date
-    assert fields["last_login"].annotation == datetime.time
-    assert fields["balance"].annotation == float
-    assert fields["rating"].annotation == Decimal
-    assert fields["data"].annotation == Optional[bytes]
+    assert fields["id"].annotation is int
+    assert fields["name"].annotation is str
+    assert fields["fullname"].annotation is Optional[str]
+    assert fields["age"].annotation is int
+    assert fields["is_active"].annotation is bool
+    assert fields["created_at"].annotation is datetime.datetime
+    assert fields["registered_on"].annotation is datetime.date
+    assert fields["last_login"].annotation is datetime.time
+    assert fields["balance"].annotation is float
+    assert fields["rating"].annotation is Decimal
+    assert fields["data"].annotation is Optional[bytes]
 
 
 def test_dto_naming_and_module():

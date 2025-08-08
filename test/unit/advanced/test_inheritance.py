@@ -72,8 +72,8 @@ def test_mixin_inheritance():
     assert "updated_at" in fields
 
     # Check types for mixin fields
-    assert fields["created_at"].annotation == datetime.datetime
-    assert fields["updated_at"].annotation == datetime.datetime
+    assert fields["created_at"].annotation is datetime.datetime
+    assert fields["updated_at"].annotation is datetime.datetime
 
 
 def test_abstract_base_model_dto_creation():

@@ -19,7 +19,7 @@ def test_one_to_many_relationship():
     # Test parent DTO with children collection
     user_fields = UserWithAddressesDTO.model_fields
     assert "addresses" in user_fields
-    assert user_fields["addresses"].annotation == List[AddressDTO]
+    assert user_fields["addresses"].annotation is List[AddressDTO]
 
     # Test child DTO excluding parent reference
     address_fields = AddressDTO.model_fields

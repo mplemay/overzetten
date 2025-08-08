@@ -42,7 +42,7 @@ def test_naming_does_not_affect_functionality():
     fields = MyDTO.model_fields
     assert "id" in fields
     assert "name" in fields
-    assert fields["id"].annotation == int
+    assert fields["id"].annotation is int
 
     # Check instantiation
     instance = MyDTO(

@@ -52,5 +52,5 @@ def test_include_with_mapped():
 
     fields = UserIncludeMappedDTO.model_fields
     assert list(fields.keys()) == ["name", "age"]
-    assert fields["name"].annotation == EmailStr
-    assert fields["age"].annotation == int
+    assert fields["name"].annotation is EmailStr
+    assert fields["age"].annotation is int

@@ -23,7 +23,7 @@ def test_nullable_no_default():
 
     fields = NullableDTO.model_fields
     assert not fields["nullable_no_default"].is_required()
-    assert fields["nullable_no_default"].annotation == Optional[str]
+    assert fields["nullable_no_default"].annotation is Optional[str]
     assert fields["nullable_no_default"].default is None
 
 
@@ -47,7 +47,7 @@ def test_nullable_with_default():
 
     fields = NullableDefaultDTO.model_fields
     assert not fields["nullable_with_default"].is_required()
-    assert fields["nullable_with_default"].annotation == Optional[str]
+    assert fields["nullable_with_default"].annotation is Optional[str]
     assert fields["nullable_with_default"].default == "nullable_default"
 
 
@@ -76,7 +76,7 @@ def test_nullable_with_server_default():
 
     fields = NullableServerDefaultDTO.model_fields
     assert not fields["nullable_with_server_default"].is_required()
-    assert fields["nullable_with_server_default"].annotation == Optional[str]
+    assert fields["nullable_with_server_default"].annotation is Optional[str]
     assert fields["nullable_with_server_default"].default is None
 
 
@@ -112,7 +112,7 @@ def test_interaction_with_custom_field_defaults():
     assert fields["required_no_default"].default == "custom_default_for_required"
 
     assert not fields["nullable_no_default"].is_required()
-    assert fields["nullable_no_default"].annotation == Optional[str]
+    assert fields["nullable_no_default"].annotation is Optional[str]
     assert fields["nullable_no_default"].default == "custom_default_for_nullable"
 
     # Ensure existing SQLAlchemy defaults are not overridden unless specified
