@@ -18,7 +18,7 @@ import enum
 import uuid
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import TypeDecorator
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 import datetime
 from decimal import Decimal
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -103,6 +103,15 @@ class NullableTestModel(Base):
     nullable_field: Mapped[Optional[str]]
     already_optional_field: Mapped[Optional[int]]
     nullable_email: Mapped[Optional[str]] = mapped_column(String)
+
+
+class ServerNullableTestModel(Base):
+    __tablename__ = "server_nullable_test"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    # Nullable with a server default
+    server_nullable_field: Mapped[Optional[str]] = mapped_column(String, nullable=True, server_default="server_default_value")
+    # Not nullable with a server default
+    server_not_nullable_field: Mapped[str] = mapped_column(String, server_default="another_server_default")
 
 
 class DefaultValueTestModel(Base):
@@ -243,6 +252,22 @@ class CustomTypeModel(Base):
     __tablename__ = "custom_type_test"
     id: Mapped[int] = mapped_column(primary_key=True)
     custom_field: Mapped[int] = mapped_column(CustomInt)
+
+
+class NoPythonType(TypeDecorator):
+    impl = String
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        return value
+
+    def process_result_value(self, value, dialect):
+        return value
+
+class NoPythonTypeModel(Base):
+    __tablename__ = "no_python_type_test"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    no_python_field: Mapped[Any] = mapped_column(NoPythonType)
 
 
 class MappedAnnotationTestModel(Base):

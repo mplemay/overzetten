@@ -52,15 +52,15 @@ This document outlines a comprehensive testing plan for the `overzetten` library
     - ~`UUID4`, `Json`, `SecretStr`~
     - ~Custom Pydantic validators and constraints~
     - ~`Field()` with validation, description, examples~
-    - Annotated types with metadata
+    - ~Annotated types with metadata~
 - ~Test mapping to complex types:~
     - ~`List[CustomType]`, `Dict[str, CustomType]`~
     - ~`Union` types, `Literal` types~
     - ~Custom Pydantic models as field types~
 - **New:** Test mapping relationships to other DTO types.
 - **New:** Test circular mapping references.
-- **New:** Test mapping same field to different types in different DTOs.
-- **New:** Test mapping fields that don't exist in SQLAlchemy model (should error).
+- ~**New:** Test mapping same field to different types in different DTOs.~
+- ~**New:** Test mapping fields that don't exist in SQLAlchemy model (should error).~
 - **New:** Test mapping with inheritance (parent class mappings).
 
 ### Field Exclusion (`exclude` parameter) (Enhanced)
@@ -69,7 +69,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 - Test excluding fields with foreign key constraints.
 - ~**New:** Test excluding fields that are referenced in `mapped` (should take precedence).~
 - ~**New:** Test excluding all fields except one (edge case).~
-- **New:** Test excluding computed/hybrid properties.
+- ~**New:** Test excluding computed/hybrid properties.~
 
 ### Field Inclusion (`include` parameter) (New Section)
 **Test Suite:** `test_field_inclusion.py`
@@ -97,7 +97,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 **Test Suite:** `test_defaults_and_required.py`
 - ~Test scalar defaults (`default=True`, `default='value'`).~
 - ~Test callable defaults (`default=datetime.now`).~
-- Test server defaults (`server_default=func.now()`).
+- ~Test server defaults (`server_default=func.now()`).~
 - **New:** Test `insert_default` vs `default` vs `server_default` handling.
 - **New:** Test defaults with custom type mappings.
 - Test `init=False` fields (should not appear in DTO constructor).
@@ -113,9 +113,9 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 
 ### Required Field Logic (New Section)
 - ~Test logic: not nullable and no default = required.~
-- Test logic: nullable and no default = `Optional` with `None` default.
-- Test logic: not nullable but has default = `Optional` with default.
-- Test interaction with custom `field_defaults`.
+- ~Test logic: nullable and no default = `Optional` with `None` default.~
+- ~Test logic: not nullable but has default = `T` with default.~
+- ~Test interaction with custom `field_defaults`.
 
 ## 4. Inheritance and Relationships (Major Enhancement)
 
@@ -126,15 +126,15 @@ This document outlines a comprehensive testing plan for the `overzetten` library
     - Test discriminator column handling.
     - Test inherited field exclusion/mapping.
 - Joined Table Inheritance:
-    - Test field distribution across tables.
+    - ~Test field distribution across tables.~
     - Test foreign key relationships between parent/child.
 - Concrete Table Inheritance:
     - Test independent table DTOs.
 - Mixin Classes:
-    - Test DTOs from models with mixins.
+    - ~Test DTOs from models with mixins.~
     - Test mixin field inheritance.
 - Abstract Base Classes:
-    - Test that abstract models can't create DTOs directly.
+    - ~Test that abstract models can't create DTOs directly.~
 
 ### Relationships (Comprehensive New Section)
 **Test Suite:** `test_relationships.py`
@@ -149,15 +149,15 @@ This document outlines a comprehensive testing plan for the `overzetten` library
     - Test association table handling.
     - Test through-model relationships.
 - Self-Referential:
-    - Test tree structures, hierarchical data.
+    - ~Test tree structures, hierarchical data.~
 - Advanced Relationship Options:
     - `back_populates`, `backref` handling.
     - `cascade` option preservation.
     - `secondary` table relationships.
     - `secondary` table relationships.
 - Relationship Mapping:
-    - Test mapping relationships to other DTO types.
-    - Test circular DTO references.
+    - ~Test mapping relationships to other DTO types.~
+    - ~Test circular DTO references.~
     - Test relationship validation.
 
 ## 5. Advanced Features (Enhanced)
@@ -436,4 +436,3 @@ tests/
 │   ├── factories.py              # Data factories
 │   └── profiling.py              # Performance measurement
 └── conftest.py                    # Global pytest configuration
-```

@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 import datetime
 from decimal import Decimal
 
@@ -15,6 +15,17 @@ from overzetten.__tests__.fixtures.models import (
     SQLiteSpecificTypesModel,
 )
 import uuid
+from overzetten.__tests__.fixtures.models import NoPythonTypeModel
+
+
+def test_no_python_type_conversion():
+    """Test handling of SQLAlchemy types that don't have a python_type defined."""
+
+    class NoPythonTypeDTO(DTO[NoPythonTypeModel]):
+        pass
+
+    fields = NoPythonTypeDTO.model_fields
+    assert fields["no_python_field"].annotation is Any
 
 
 def test_type_conversion():

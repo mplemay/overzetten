@@ -2,7 +2,24 @@ from typing import Optional
 from pydantic import EmailStr
 
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.models import NullableTestModel
+from overzetten.__tests__.fixtures.models import NullableTestModel, ServerNullableTestModel
+
+
+def test_server_side_nullable_handling():
+    """Test handling of server-side nullable fields."""
+
+    class ServerNullableDTO(DTO[ServerNullableTestModel]):
+        pass
+
+    fields = ServerNullableDTO.model_fields
+
+    # Field is nullable in DB and has server_default, should be Optional[str] with default None
+    assert fields["server_nullable_field"].annotation is Optional[str]
+    assert fields["server_nullable_field"].default is None
+
+    # Field is not nullable in DB but has server_default, should be str with default None
+    assert fields["server_not_nullable_field"].annotation is str
+    assert fields["server_not_nullable_field"].default is None
 
 
 def test_nullable_field_handling():
