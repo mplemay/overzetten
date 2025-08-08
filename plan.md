@@ -143,11 +143,11 @@ This document outlines a comprehensive testing plan for the `overzetten` library
     - ~Test child DTO excluding parent reference.~
     - Test lazy loading behavior preservation.
 - Many-to-One:
-    - Test foreign key field handling.
-    - Test relationship object inclusion.
+    - - ~Test foreign key field handling.~
+    - - ~Test relationship object inclusion.~
 - Many-to-Many:
-    - Test association table handling.
-    - Test through-model relationships.
+    - - ~Test association table handling.~
+    - - ~Test through-model relationships.~
 - ~Self-Referential:~
     - ~Test tree structures, hierarchical data.~
 - Advanced Relationship Options:

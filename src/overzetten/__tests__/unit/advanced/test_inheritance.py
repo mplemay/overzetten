@@ -122,13 +122,13 @@ def test_inherited_field_exclusion_and_mapping():
     class BaseMappedDTO(DTO[BaseMappedModel]):
         config = DTOConfig(
             exclude={BaseMappedModel.base_field},
-            mapped={BaseMappedModel.common_field: str} # Ensure it's explicitly str
+            mapped={BaseMappedModel.common_field: str},  # Ensure it's explicitly str
         )
 
     class ChildMappedDTO(DTO[ChildMappedModel]):
         config = DTOConfig(
             exclude={ChildMappedModel.child_field},
-            mapped={ChildMappedModel.common_field: str} # Ensure it's explicitly str
+            mapped={ChildMappedModel.common_field: str},  # Ensure it's explicitly str
         )
 
     # Base DTO should exclude base_field and map common_field

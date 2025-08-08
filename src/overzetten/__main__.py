@@ -158,9 +158,11 @@ class DTOMeta(type):
             attr = getattr(sqlalchemy_model, column_name)
             # Exclude fields with init=False (dataclass-specific)
             # Check __dataclass_fields__ for the init parameter
-            if hasattr(sqlalchemy_model, '__dataclass_fields__') and \
-               column_name in sqlalchemy_model.__dataclass_fields__ and \
-               sqlalchemy_model.__dataclass_fields__[column_name].init is False:
+            if (
+                hasattr(sqlalchemy_model, "__dataclass_fields__")
+                and column_name in sqlalchemy_model.__dataclass_fields__
+                and sqlalchemy_model.__dataclass_fields__[column_name].init is False
+            ):
                 continue
 
             # Apply include/exclude logic
@@ -225,8 +227,6 @@ class DTOMeta(type):
             return attr in config.include
 
         return True
-
-    
 
     @staticmethod
     def _get_field_type(
@@ -306,17 +306,19 @@ class DTOMeta(type):
         if column is not None:
             # Primary keys that are autoincrementing should not be required in Pydantic
             if column.primary_key and column.autoincrement:
-                return None # Pydantic default is None for autoincrementing PKs
+                return None  # Pydantic default is None for autoincrementing PKs
 
             if column.default is not None:
                 # Handle Sequence objects directly
                 if isinstance(column.default, Sequence):
-                    return None # Sequences are handled by DB, not Pydantic default
+                    return None  # Sequences are handled by DB, not Pydantic default
                 # Handle callable defaults from SQLAlchemy
-                elif hasattr(column.default, 'arg') and isinstance(column.default.arg, collections.abc.Callable):
+                elif hasattr(column.default, "arg") and isinstance(
+                    column.default.arg, collections.abc.Callable
+                ):
                     return Field(default_factory=column.default.arg)
                 # Handle scalar defaults from SQLAlchemy
-                elif hasattr(column.default, 'arg'):
+                elif hasattr(column.default, "arg"):
                     return column.default.arg
                 # Fallback for other types of column.default (e.g., literal values directly)
                 else:

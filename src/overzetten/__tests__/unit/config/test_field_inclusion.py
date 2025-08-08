@@ -2,7 +2,12 @@ from pydantic import EmailStr
 from typing import List
 
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.models import User, Address, BaseMappedModel, ChildMappedModel
+from overzetten.__tests__.fixtures.models import (
+    User,
+    Address,
+    BaseMappedModel,
+    ChildMappedModel,
+)
 
 
 def test_field_inclusion():
@@ -67,7 +72,7 @@ def test_include_relationships_vs_columns():
         config = DTOConfig(
             include={User.name, User.addresses},
             include_relationships=True,
-            mapped={User.addresses: List[AddressDTO]}
+            mapped={User.addresses: List[AddressDTO]},
         )
 
     fields = UserWithAddressesIncludedDTO.model_fields
@@ -81,7 +86,11 @@ def test_include_inherited_fields_selectively():
 
     class ChildMappedIncludedDTO(DTO[ChildMappedModel]):
         config = DTOConfig(
-            include={ChildMappedModel.id, ChildMappedModel.child_field, ChildMappedModel.common_field}
+            include={
+                ChildMappedModel.id,
+                ChildMappedModel.child_field,
+                ChildMappedModel.common_field,
+            }
         )
 
     fields = ChildMappedIncludedDTO.model_fields
@@ -91,9 +100,7 @@ def test_include_inherited_fields_selectively():
     assert fields["common_field"].annotation is str
 
     class BaseMappedIncludedDTO(DTO[BaseMappedModel]):
-        config = DTOConfig(
-            include={BaseMappedModel.id, BaseMappedModel.base_field}
-        )
+        config = DTOConfig(include={BaseMappedModel.id, BaseMappedModel.base_field})
 
     fields = BaseMappedIncludedDTO.model_fields
     assert list(fields.keys()) == ["id", "base_field"]

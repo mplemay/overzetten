@@ -13,16 +13,24 @@ from sqlalchemy import (
     ForeignKey,
     case,
     Sequence,
+    Table,
+    Column,
 )
-from sqlalchemy.dialects import postgresql, mysql
-import enum
-import uuid
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, MappedAsDataclass
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    mapped_column,
+    relationship,
+    MappedAsDataclass,
+)
 from sqlalchemy import TypeDecorator
 from typing import Optional, List, Dict, Any
 import datetime
 from decimal import Decimal
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.dialects import postgresql, mysql
+import enum
+import uuid
 
 
 class Base(DeclarativeBase):
@@ -110,9 +118,13 @@ class ServerNullableTestModel(Base):
     __tablename__ = "server_nullable_test"
     id: Mapped[int] = mapped_column(primary_key=True)
     # Nullable with a server default
-    server_nullable_field: Mapped[Optional[str]] = mapped_column(String, nullable=True, server_default="server_default_value")
+    server_nullable_field: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, server_default="server_default_value"
+    )
     # Not nullable with a server default
-    server_not_nullable_field: Mapped[str] = mapped_column(String, server_default="another_server_default")
+    server_not_nullable_field: Mapped[str] = mapped_column(
+        String, server_default="another_server_default"
+    )
 
 
 class DefaultValueTestModel(Base):
@@ -266,6 +278,7 @@ class NoPythonType(TypeDecorator):
     def process_result_value(self, value, dialect):
         return value
 
+
 class NoPythonTypeModel(Base):
     __tablename__ = "no_python_type_test"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -279,9 +292,11 @@ class AdvancedDefaultTestModel(MappedAsDataclass, Base):
     # Field with init=False, should not appear in DTO constructor
     computed_value: Mapped[int] = mapped_column(Integer, init=False, default=100)
     # Field with insert_default
-    insert_only_value: Mapped[str] = mapped_column(String, insert_default="insert_default_val")
+    insert_only_value: Mapped[str] = mapped_column(
+        String, insert_default="insert_default_val"
+    )
     # Field with a sequence (for non-PK, though less common)
-    sequence_value: Mapped[int] = mapped_column(Integer, default=Sequence('my_seq'))
+    sequence_value: Mapped[int] = mapped_column(Integer, default=Sequence("my_seq"))
     # Field with a custom type and default
     custom_type_default: Mapped[int] = mapped_column(CustomInt, default=5)
 
@@ -354,5 +369,61 @@ class ConcreteTableBase(Base):
 
 class ConcreteTableChild(ConcreteTableBase):
     __tablename__ = "concrete_table_child"
-    id: Mapped[int] = mapped_column(ForeignKey("concrete_table_base.id"), primary_key=True)
+    id: Mapped[int] = mapped_column(
+        ForeignKey("concrete_table_base.id"), primary_key=True
+    )
     child_data: Mapped[str]
+
+
+# Many-to-Many Relationship (Association Table)
+association_table = Table(
+    "association",
+    Base.metadata,
+    Column("left_id", ForeignKey("left_table.id"), primary_key=True),
+    Column("right_id", ForeignKey("right_table.id"), primary_key=True),
+)
+
+
+class Left(Base):
+    __tablename__ = "left_table"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    rights: Mapped[List["Right"]] = relationship(
+        secondary=association_table, back_populates="lefts"
+    )
+
+
+class Right(Base):
+    __tablename__ = "right_table"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    lefts: Mapped[List["Left"]] = relationship(
+        secondary=association_table, back_populates="rights"
+    )
+
+
+# Many-to-Many Relationship (Association Object / Through Model)
+class ThroughModel(Base):
+    __tablename__ = "through_table"
+    left_id: Mapped[int] = mapped_column(ForeignKey("left_through_table.id"), primary_key=True)
+    right_id: Mapped[int] = mapped_column(ForeignKey("right_through_table.id"), primary_key=True)
+    extra_data: Mapped[str]
+
+    left: Mapped["LeftThrough"] = relationship(back_populates="right_associations")
+    right: Mapped["RightThrough"] = relationship(back_populates="left_associations")
+
+
+class LeftThrough(Base):
+    __tablename__ = "left_through_table"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    right_associations: Mapped[List["ThroughModel"]] = relationship(back_populates="left")
+    rights: Mapped[List["RightThrough"]] = relationship(secondary="through_table", back_populates="lefts")
+
+
+class RightThrough(Base):
+    __tablename__ = "right_through_table"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    left_associations: Mapped[List["ThroughModel"]] = relationship(back_populates="right")
+    lefts: Mapped[List["LeftThrough"]] = relationship(secondary="through_table", back_populates="rights")

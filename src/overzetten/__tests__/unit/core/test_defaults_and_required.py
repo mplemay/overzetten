@@ -1,6 +1,9 @@
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.models import DefaultValueTestModel, User, AdvancedDefaultTestModel, CustomInt
-from pydantic import Field
+from overzetten.__tests__.fixtures.models import (
+    DefaultValueTestModel,
+    User,
+    AdvancedDefaultTestModel,
+)
 
 
 def test_default_values_and_required_fields():
@@ -92,7 +95,9 @@ def test_advanced_sqlalchemy_defaults():
     # sequence_value should be present but not required (sequence)
     assert "sequence_value" in fields
     assert not fields["sequence_value"].is_required()
-    assert fields["sequence_value"].default is None # Pydantic default is None for sequence
+    assert (
+        fields["sequence_value"].default is None
+    )  # Pydantic default is None for sequence
 
     # custom_type_default should have its default value
     assert fields["custom_type_default"].default == 5
@@ -127,7 +132,7 @@ def test_custom_defaults_type_validation():
     class CustomDefaultsTypeValidationDTO(DTO[DefaultValueTestModel]):
         config = DTOConfig(
             field_defaults={
-                DefaultValueTestModel.scalar_default: 123, # Should be str, but we provide int
+                DefaultValueTestModel.scalar_default: 123,  # Should be str, but we provide int
             }
         )
 
@@ -140,5 +145,12 @@ def test_custom_defaults_type_validation():
     # This will raise a ValidationError if 123 cannot be coerced to str
     # However, Pydantic's default behavior is to coerce if possible
     # So, we expect it to pass if the DTO is created with the default
-    instance = CustomDefaultsTypeValidationDTO(id=1, callable_default="2023-01-01T12:00:00", required_field="test", server_default_field="test")
-    assert instance.scalar_default == 123 # Pydantic 2.x does not coerce int to str by default for Field(default=...)
+    instance = CustomDefaultsTypeValidationDTO(
+        id=1,
+        callable_default="2023-01-01T12:00:00",
+        required_field="test",
+        server_default_field="test",
+    )
+    assert (
+        instance.scalar_default == 123
+    )  # Pydantic 2.x does not coerce int to str by default for Field(default=...)
