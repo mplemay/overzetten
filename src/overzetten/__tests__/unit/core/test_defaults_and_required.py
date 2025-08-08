@@ -1,5 +1,5 @@
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.sqlalchemy_models import DefaultValueTestModel, User
+from overzetten.__tests__.fixtures.models import DefaultValueTestModel, User
 
 
 def test_default_values_and_required_fields():

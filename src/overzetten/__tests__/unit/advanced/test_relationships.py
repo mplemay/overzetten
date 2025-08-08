@@ -1,7 +1,7 @@
 from typing import List
 
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.sqlalchemy_models import User, Address
+from overzetten.__tests__.fixtures.models import User, Address
 
 
 def test_one_to_many_relationship():

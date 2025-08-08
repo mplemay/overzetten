@@ -3,7 +3,7 @@ import datetime
 from decimal import Decimal
 
 from overzetten import DTO
-from overzetten.__tests__.fixtures.sqlalchemy_models import (
+from overzetten.__tests__.fixtures.models import (
     TypeConversionTestModel,
     CustomTypeModel,
     MappedAnnotationTestModel,

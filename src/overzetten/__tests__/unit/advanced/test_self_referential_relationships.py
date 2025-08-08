@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.sqlalchemy_models import Node
+from overzetten.__tests__.fixtures.models import Node
 
 
 def test_self_referential_relationship_mapping():

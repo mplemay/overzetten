@@ -2,7 +2,7 @@ import pytest
 import datetime
 
 from overzetten import DTO
-from overzetten.__tests__.fixtures.sqlalchemy_models import (
+from overzetten.__tests__.fixtures.models import (
     Employee,
     Manager,
     Engineer,

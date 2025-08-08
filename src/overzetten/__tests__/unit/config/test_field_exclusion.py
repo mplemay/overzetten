@@ -1,5 +1,9 @@
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.sqlalchemy_models import User, ChildMappedModel, Address
+from overzetten.__tests__.fixtures.models import (
+    User,
+    ChildMappedModel,
+    Address,
+)
 
 
 def test_field_exclusion():

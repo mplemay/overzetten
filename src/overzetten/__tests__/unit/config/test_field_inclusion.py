@@ -1,7 +1,7 @@
 from pydantic import EmailStr
 
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.sqlalchemy_models import User
+from overzetten.__tests__.fixtures.models import User
 
 
 def test_field_inclusion():

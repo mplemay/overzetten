@@ -1,7 +1,10 @@
 from pydantic import EmailStr
 
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.sqlalchemy_models import BaseMappedModel, ChildMappedModel
+from overzetten.__tests__.fixtures.models import (
+    BaseMappedModel,
+    ChildMappedModel,
+)
 
 
 def test_mapping_with_inheritance():

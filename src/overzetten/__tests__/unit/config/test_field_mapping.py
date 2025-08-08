@@ -5,7 +5,7 @@ from typing import List, Dict, Union, Literal, Optional, Annotated
 import uuid
 
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.sqlalchemy_models import User, UnionLiteralTestModel
+from overzetten.__tests__.fixtures.models import User, UnionLiteralTestModel
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 
