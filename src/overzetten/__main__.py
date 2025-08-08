@@ -156,6 +156,21 @@ class DTOMeta(type):
 
             fields[column_name] = (field_type, default_value)
 
+        # Process column properties
+        if hasattr(inspector, 'column_properties'):
+            for prop_name, prop in inspector.column_properties.items():
+                attr = getattr(sqlalchemy_model, prop_name)
+                if not DTOMeta._should_include_field(attr, config):
+                    continue
+
+                # For column_property, the type is usually derived from its expression
+                # and it's generally not nullable unless explicitly defined.
+                # We'll pass the property itself to _get_field_type for specific handling.
+                field_type = DTOMeta._get_field_type(sqlalchemy_model, attr, prop, config)
+                default_value = DTOMeta._get_field_default(attr, prop, config) # Pass prop as column for default handling
+
+                fields[prop_name] = (field_type, default_value)
+
         # Validate mapped fields that are not columns
         for mapped_attr, _ in config.mapped.items():
             if isinstance(mapped_attr, InstrumentedAttribute) and not hasattr(sqlalchemy_model, mapped_attr.key):
@@ -222,10 +237,10 @@ class DTOMeta(type):
     def _get_field_type(
         sqlalchemy_model: Type[DeclarativeBase],
         attr: InstrumentedAttribute,
-        column,
+        obj, # Renamed from 'column' to 'obj' to be more generic
         config: DTOConfig,
     ) -> Type:
-        """Get the Pydantic field type for a SQLAlchemy column."""
+        """Get the Pydantic field type for a SQLAlchemy column or column_property."""
         # Check if field has custom mapping
         if attr in config.mapped:
             mapped_value = config.mapped[attr]
@@ -233,7 +248,10 @@ class DTOMeta(type):
             # the type is the python_type of the column, and the FieldInfo
             # is handled as a default value.
             if isinstance(mapped_value, FieldInfo):
-                field_type = column.type.python_type
+                if hasattr(obj, 'type'): # For Column objects
+                    field_type = obj.type.python_type
+                else: # For column_property or other non-column objects
+                    field_type = Any # Fallback for column_property if type cannot be inferred
             elif get_origin(mapped_value) is Annotated:
                 field_type = mapped_value  # Keep the Annotated type as is
             else:
@@ -248,21 +266,28 @@ class DTOMeta(type):
                     if mapped_args:
                         field_type = mapped_args[0]
                     else:
-                        field_type = column.type.python_type
+                        if hasattr(obj, 'type'):
+                            field_type = obj.type.python_type
+                        else:
+                            field_type = Any # Fallback for column_property
                 else:
                     field_type = mapped_annotation
             else:
-                # Fallback to SQLAlchemy's python_type
-                field_type = column.type.python_type
+                # Fallback to SQLAlchemy's python_type or Any for column_property
+                if hasattr(obj, 'type'):
+                    field_type = obj.type.python_type
+                else:
+                    field_type = Any # Fallback for column_property
 
-        # Handle nullable columns
-        if column is not None and column.nullable and not DTOMeta._is_optional_type(field_type):
+        # Handle nullable columns/properties
+        # For column_property, assume non-nullable unless explicitly mapped or inferred
+        if (hasattr(obj, 'nullable') and obj.nullable) and not DTOMeta._is_optional_type(field_type):
             field_type = Optional[field_type]
 
         return field_type
 
     @staticmethod
-    def _get_field_default(attr: InstrumentedAttribute, column, config: DTOConfig) -> Any:
+    def _get_field_default(attr: InstrumentedAttribute, obj, config: DTOConfig) -> Any:
         """Get the default value for a field."""
         # Check for a mapped Field() object first
         if attr in config.mapped:
@@ -282,38 +307,39 @@ class DTOMeta(type):
             return custom_default
 
         # Use SQLAlchemy column default or server_default
-        if column is not None:
-            # Primary keys that are autoincrementing should not be required in Pydantic
-            if column.primary_key and column.autoincrement:
-                return None  # Pydantic default is None for autoincrementing PKs
+        # For column_property, they typically don't have defaults in the same way columns do
+        if hasattr(obj, 'primary_key') and obj.primary_key and hasattr(obj, 'autoincrement') and obj.autoincrement:
+            return None  # Pydantic default is None for autoincrementing PKs
 
-            if column.default is not None:
-                # Handle Sequence objects directly
-                if isinstance(column.default, Sequence):
-                    return None  # Sequences are handled by DB, not Pydantic default
-                # Handle callable defaults from SQLAlchemy
-                elif hasattr(column.default, "arg") and isinstance(column.default.arg, Callable):
-                    return Field(default_factory=column.default.arg)
-                # Handle scalar defaults from SQLAlchemy
-                elif hasattr(column.default, "arg"):
-                    return column.default.arg
-                # Fallback for other types of column.default (e.g., literal values directly)
-                else:
-                    return column.default
-            elif column.server_default is not None:
-                # Fields with server_default are not required in Pydantic
-                return None
-            elif column.nullable:
-                return None
+        if hasattr(obj, 'default') and obj.default is not None:
+            # Handle Sequence objects directly
+            if isinstance(obj.default, Sequence):
+                return None  # Sequences are handled by DB, not Pydantic default
+            # Handle callable defaults from SQLAlchemy
+            elif hasattr(obj.default, "arg") and isinstance(obj.default.arg, Callable):
+                return Field(default_factory=obj.default.arg)
+            # Handle scalar defaults from SQLAlchemy
+            elif hasattr(obj.default, "arg"):
+                return obj.default.arg
+            # Fallback for other types of obj.default (e.g., literal values directly)
             else:
-                return ...  # Required field
-        else:
-            # If column is None, it's likely a relationship or a mapped field without a direct column
-            # For relationships, they are typically optional unless explicitly set otherwise
-            # For mapped fields, their default should come from config.mapped or config.field_defaults
-            # If not found, and it's a relationship, it might be None or an empty list/dict
-            # For now, return None for relationships if no explicit default is provided
+                return obj.default
+        elif hasattr(obj, 'server_default') and obj.server_default is not None:
+            # Fields with server_default are not required in Pydantic
             return None
+        elif hasattr(obj, 'nullable') and obj.nullable:
+            return None
+        else:
+            # If obj is not a column or has no default/server_default/nullable, it's required unless it's a relationship
+            # For column_property, they are generally required unless explicitly made optional via mapping
+            if isinstance(obj, InstrumentedAttribute) and obj.is_property and not obj.is_column_property:
+                # This is a relationship, which is typically optional
+                return None
+            elif isinstance(obj, InstrumentedAttribute) and obj.is_column_property:
+                # Column properties are generally required unless explicitly optional
+                return ...
+            else:
+                return ...  # Required field by default for columns without defaults
 
     @staticmethod
     def _is_optional_type(field_type) -> bool:

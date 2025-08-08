@@ -203,19 +203,19 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 - ~Hybrid Properties: Test inclusion/exclusion, type detection.~
 - ~Association Objects: Test many-to-many through objects.~
 - ~Synonyms: Test field aliasing.~
-- Column Properties: Test computed columns, SQL expressions.
+- ~Column Properties: Test computed columns, SQL expressions.~
 - ~Custom Types: Test user-defined column types.~
-- Multiple Schemas: Test cross-schema relationships.
+- ~Multiple Schemas: Test cross-schema relationships.~
 - ~Polymorphic Models: Test `polymorphic_on`, `with_polymorphic`.~
 
 ### Memory and Performance (Enhanced)
 **Test Suite:** `test_performance.py`
-- Load Testing: Generate 1000s of DTOs rapidly.
-- Memory Profiling: Track memory usage patterns.
-- Concurrent Access: Test thread safety.
-- Large Model Testing: Models with 100+ fields.
-- Deep Inheritance: 10+ levels of model inheritance.
-- Benchmark Comparisons: vs manual Pydantic models, vs dataclasses.
+- ~Load Testing: Generate 1000s of DTOs rapidly.~
+- ~Memory Profiling: Track memory usage patterns.~
+- ~Concurrent Access: Test thread safety.~
+- ~Large Model Testing: Models with 100+ fields.~
+- ~Deep Inheritance: 10+ levels of model inheritance.~
+- ~Benchmark Comparisons: vs manual Pydantic models, vs dataclasses.~
 
 ## 7. Integration Tests (Significantly Enhanced)
 
