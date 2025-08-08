@@ -9,18 +9,21 @@ from typing import (
     Union,
     TypeVar,
     Generic,
+    Annotated,
 )
-from sqlalchemy.orm import MappedAsDataclass
+from sqlalchemy.orm import MappedAsDataclass, Mapped
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from sqlalchemy import inspect
-from pydantic import BaseModel, ConfigDict, create_model
+from sqlalchemy import inspect, Sequence
+from pydantic import BaseModel, ConfigDict, create_model, Field
+from pydantic.fields import FieldInfo
 from dataclasses import dataclass, field
+import collections.abc
 
 
 T = TypeVar("T", bound=MappedAsDataclass)
 
 
-@dataclass
+@dataclass(frozen=True, slots=True, kw_only=True)
 class DTOConfig:
     """Configuration for DTO generation."""
 
@@ -96,6 +99,8 @@ class DTOMeta(type):
             # but give it the name that was requested
             pydantic_model.__name__ = model_name
             pydantic_model.__qualname__ = model_name
+            pydantic_model.__module__ = namespace.get("__module__")
+            pydantic_model.model_rebuild()
 
             return pydantic_model
         else:
@@ -142,23 +147,45 @@ class DTOMeta(type):
         fields = {}
 
         # Get SQLAlchemy inspector
+        if not hasattr(sqlalchemy_model, "__table__"):
+            raise TypeError(
+                f"Cannot create DTO from abstract or unmapped SQLAlchemy model '{sqlalchemy_model.__name__}'."
+            )
         inspector = inspect(sqlalchemy_model)
 
         # Process each column
         for column_name, column in inspector.columns.items():
             attr = getattr(sqlalchemy_model, column_name)
+            # Exclude fields with init=False (dataclass-specific)
+            # Check __dataclass_fields__ for the init parameter
+            if (
+                hasattr(sqlalchemy_model, "__dataclass_fields__")
+                and column_name in sqlalchemy_model.__dataclass_fields__
+                and sqlalchemy_model.__dataclass_fields__[column_name].init is False
+            ):
+                continue
 
             # Apply include/exclude logic
             if not DTOMeta._should_include_field(attr, config):
                 continue
 
             # Get field type
-            field_type = DTOMeta._get_field_type(attr, column, config)
+            field_type = DTOMeta._get_field_type(sqlalchemy_model, attr, column, config)
 
             # Get default value
             default_value = DTOMeta._get_field_default(attr, column, config)
 
             fields[column_name] = (field_type, default_value)
+
+        # Validate mapped fields that are not columns
+        for mapped_attr, _ in config.mapped.items():
+            if isinstance(mapped_attr, InstrumentedAttribute) and not hasattr(
+                sqlalchemy_model, mapped_attr.key
+            ):
+                raise ValueError(
+                    f"Mapped attribute '{mapped_attr.key}' does not exist on SQLAlchemy model "
+                    f"'{sqlalchemy_model.__name__}'."
+                )
 
         # Process relationships if enabled
         if config.include_relationships:
@@ -178,7 +205,13 @@ class DTOMeta(type):
                 # Get default value
                 default_value = config.field_defaults.get(attr, None)
 
-                fields[rel_name] = (Optional[field_type], default_value)
+                # Handle collection vs. scalar relationships
+                if relationship.uselist:
+                    # For lists (one-to-many, many-to-many), the type is the list itself
+                    fields[rel_name] = (field_type, default_value or [])
+                else:
+                    # For scalar (many-to-one, one-to-one), it can be optional
+                    fields[rel_name] = (Optional[field_type], default_value)
 
         return fields
 
@@ -196,17 +229,51 @@ class DTOMeta(type):
         return True
 
     @staticmethod
-    def _get_field_type(attr: InstrumentedAttribute, column, config: DTOConfig) -> Type:
+    def _get_field_type(
+        sqlalchemy_model: Type[MappedAsDataclass],
+        attr: InstrumentedAttribute,
+        column,
+        config: DTOConfig,
+    ) -> Type:
         """Get the Pydantic field type for a SQLAlchemy column."""
         # Check if field has custom mapping
         if attr in config.mapped:
-            field_type = config.mapped[attr]
+            mapped_value = config.mapped[attr]
+            # If the mapped value is a FieldInfo (like from Field()),
+            # the type is the python_type of the column, and the FieldInfo
+            # is handled as a default value.
+            if isinstance(mapped_value, FieldInfo):
+                field_type = column.type.python_type
+            elif get_origin(mapped_value) is Annotated:
+                field_type = mapped_value  # Keep the Annotated type as is
+            else:
+                field_type = mapped_value
         else:
-            # Convert SQLAlchemy type to Python type
-            field_type = column.type.python_type
+            # Try to get the type from the Mapped annotation first
+            if (
+                hasattr(sqlalchemy_model, "__annotations__")
+                and attr.key in sqlalchemy_model.__annotations__
+            ):
+                mapped_annotation = sqlalchemy_model.__annotations__[attr.key]
+                # Extract the inner type from Mapped[T]
+                if get_origin(mapped_annotation) is Mapped:
+                    mapped_args = get_args(mapped_annotation)
+                    if mapped_args:
+                        field_type = mapped_args[0]
+                    else:
+                        field_type = column.type.python_type
+                else:
+                    field_type = mapped_annotation
+            else:
+                # Fallback to SQLAlchemy's python_type
+                field_type = column.type.python_type
 
         # Handle nullable columns
-        if column.nullable and not DTOMeta._is_optional_type(field_type):
+        if (
+            column is not None
+            and column.nullable
+            and not DTOMeta._is_optional_type(field_type)
+        ):
             field_type = Optional[field_type]
 
         return field_type
@@ -216,20 +283,60 @@ class DTOMeta(type):
         attr: InstrumentedAttribute, column, config: DTOConfig
     ) -> Any:
         """Get the default value for a field."""
-        # Check custom defaults first
-        if attr in config.field_defaults:
-            return config.field_defaults[attr]
+        # Check for a mapped Field() object first
+        if attr in config.mapped:
+            mapped_value = config.mapped[attr]
+            if isinstance(mapped_value, FieldInfo):
+                return mapped_value
+            elif get_origin(mapped_value) is Annotated:  # Add this block
+                for arg in get_args(mapped_value)[
+                    1:
+                ]:  # Iterate through metadata arguments
+                    if isinstance(arg, FieldInfo):
+                        return arg  # Return the FieldInfo object
 
-        # Use SQLAlchemy column default
-        if column.default is not None:
-            if hasattr(column.default, "arg"):
-                return column.default.arg
+        # Check custom defaults
+        if attr in config.field_defaults:
+            custom_default = config.field_defaults[attr]
+            if isinstance(custom_default, collections.abc.Callable):
+                return Field(default_factory=custom_default)
+            return custom_default
+
+        # Use SQLAlchemy column default or server_default
+        if column is not None:
+            # Primary keys that are autoincrementing should not be required in Pydantic
+            if column.primary_key and column.autoincrement:
+                return None  # Pydantic default is None for autoincrementing PKs
+
+            if column.default is not None:
+                # Handle Sequence objects directly
+                if isinstance(column.default, Sequence):
+                    return None  # Sequences are handled by DB, not Pydantic default
+                # Handle callable defaults from SQLAlchemy
+                elif hasattr(column.default, "arg") and isinstance(
+                    column.default.arg, collections.abc.Callable
+                ):
+                    return Field(default_factory=column.default.arg)
+                # Handle scalar defaults from SQLAlchemy
+                elif hasattr(column.default, "arg"):
+                    return column.default.arg
+                # Fallback for other types of column.default (e.g., literal values directly)
+                else:
+                    return column.default
+            elif column.server_default is not None:
+                # Fields with server_default are not required in Pydantic
+                return None
+            elif column.nullable:
+                return None
             else:
                 return ...  # Required field
-        elif column.nullable:
-            return None
         else:
-            return ...  # Required field
+            # If column is None, it's likely a relationship or a mapped field without a direct column
+            # For relationships, they are typically optional unless explicitly set otherwise
+            # For mapped fields, their default should come from config.mapped or config.field_defaults
+            # If not found, and it's a relationship, it might be None or an empty list/dict
+            # For now, return None for relationships if no explicit default is provided
+            return None
 
     @staticmethod
     def _is_optional_type(field_type) -> bool:
