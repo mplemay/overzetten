@@ -25,6 +25,9 @@ dev = [
     "ty>=0.0.1a17",
 ]
 
+[tool.uv_build]
+exclude = ["src/overzetten/__tests__"]
+
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "double"
 multiline-quotes = "double"

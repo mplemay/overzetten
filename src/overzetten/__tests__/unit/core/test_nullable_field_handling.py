@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import EmailStr
 
 from overzetten import DTO, DTOConfig
-from fixtures.sqlalchemy_models import NullableTestModel
+from overzetten.__tests__.fixtures.sqlalchemy_models import NullableTestModel
 
 
 def test_nullable_field_handling():

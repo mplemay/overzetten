@@ -1,5 +1,5 @@
 from overzetten import DTO, DTOConfig
-from fixtures.sqlalchemy_models import User
+from overzetten.__tests__.fixtures.sqlalchemy_models import User
 
 
 def test_model_name_override():
