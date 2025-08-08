@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import Address, User
+from pydantic import Field
 
 
 # Define DTOs for User and Address
@@ -13,9 +14,12 @@ class AddressDTO(DTO[Address]):
 
 
 class UserCreateDTO(DTO[User]):
+    """DTO for creating a new user."""
     config = DTOConfig(
-        exclude={User.id, User.created_at, User.addresses}, model_name="UserCreateDTO"
-    )  # Exclude auto-generated fields
+        exclude={User.id, User.created_at, User.addresses},
+        model_name="UserCreateDTO",
+        mapped={User.name: Field(..., description="The user's name", examples=["John Doe"])}
+    )
 
 
 class UserResponseDTO(DTO[User]):
@@ -207,14 +211,19 @@ def test_fastapi_openapi_schema_generation():
 
     # Check UserCreateDTO schema
     user_create_schema = openapi_schema["components"]["schemas"]["UserCreateDTO"]
+    assert user_create_schema["description"] == "DTO for creating a new user."
     assert "name" in user_create_schema["properties"]
+    assert user_create_schema["properties"]["name"]["description"] == "The user's name"
+    assert user_create_schema["properties"]["name"]["examples"] == ["John Doe"]
     assert "id" not in user_create_schema["properties"]
     assert "created_at" not in user_create_schema["properties"]
 
     # Check UserResponseDTO schema
     user_response_schema = openapi_schema["components"]["schemas"]["UserResponseDTO"]
     assert "id" in user_response_schema["properties"]
+    assert user_response_schema["properties"]["id"]["type"] == "integer"
     assert "name" in user_response_schema["properties"]
+    assert user_response_schema["properties"]["name"]["type"] == "string"
     assert "addresses" in user_response_schema["properties"]
     assert user_response_schema["properties"]["addresses"]["type"] == "array"
     assert user_response_schema["properties"]["addresses"]["items"]["$ref"] == "#/components/schemas/AddressDTO"
@@ -222,5 +231,7 @@ def test_fastapi_openapi_schema_generation():
     # Check AddressDTO schema
     address_schema = openapi_schema["components"]["schemas"]["AddressDTO"]
     assert "id" in address_schema["properties"]
+    assert address_schema["properties"]["id"]["type"] == "integer"
     assert "email_address" in address_schema["properties"]
+    assert address_schema["properties"]["email_address"]["type"] == "string"
     assert "user" not in address_schema["properties"]

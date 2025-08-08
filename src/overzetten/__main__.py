@@ -89,7 +89,7 @@ class DTOMeta(type):
             model_name = config.model_name or mcs._generate_model_name(sqlalchemy_model, config)
 
             # Use our mapper to create the Pydantic model
-            pydantic_model = mcs._create_pydantic_model(sqlalchemy_model, config)
+            pydantic_model = mcs._create_pydantic_model(sqlalchemy_model, config, namespace.get('__doc__'))
 
             # Instead of creating a new class, return the Pydantic model directly
             # but give it the name that was requested
@@ -109,7 +109,7 @@ class DTOMeta(type):
         return f"{config.model_name_prefix}{base_name}{config.model_name_suffix}"
 
     @staticmethod
-    def _create_pydantic_model(sqlalchemy_model: Type[DeclarativeBase], config: DTOConfig) -> Type[BaseModel]:
+    def _create_pydantic_model(sqlalchemy_model: Type[DeclarativeBase], config: DTOConfig, doc: Optional[str] = None) -> Type[BaseModel]:
         """Create a Pydantic model from SQLAlchemy model using DTO config."""
         # Generate model name
         model_name = config.model_name or DTOMeta._generate_model_name(sqlalchemy_model, config)
@@ -122,6 +122,7 @@ class DTOMeta(type):
             model_name,
             __config__=config.pydantic_config,
             __base__=config.base_model,
+            __doc__=doc,
             **fields,
         )
 
