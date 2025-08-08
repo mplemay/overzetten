@@ -17,16 +17,16 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 ### Type Conversion Tests
 **Test Suite:** `test_type_conversion.py`
 - ~Test conversion of all basic SQLAlchemy types:~
-    - ~`String` → `str`~
-    - ~`Integer` → `int`~
-    - ~`Boolean` → `bool`~
-    - ~`DateTime` → `datetime`~
-    - ~`Date` → `date`~
-    - ~`Time` → `time`~
-    - ~`Text` → `str`~
-    - ~`Float` → `float`~
-    - ~`Numeric`/`DECIMAL` → `Decimal`~
-    - ~`LargeBinary` → `bytes`~
+  - ~`String` → `str`~
+  - ~`Integer` → `int`~
+  - ~`Boolean` → `bool`~
+  - ~`DateTime` → `datetime`~
+  - ~`Date` → `date`~
+  - ~`Time` → `time`~
+  - ~`Text` → `str`~
+  - ~`Float` → `float`~
+  - ~`Numeric`/`DECIMAL` → `Decimal`~
+  - ~`LargeBinary` → `bytes`~
 - ~**New:** Test PostgreSQL-specific types (`UUID`, `JSONB`, `ARRAY`, `ENUM`).~
 - ~**New:** Test MySQL-specific types (`YEAR`, `SET`, `ENUM` variations).~
 - ~**New:** Test SQLite type handling and limitations.~
@@ -48,20 +48,20 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 ### Field Mapping (`mapped` parameter)
 **Test Suite:** `test_field_mapping.py`
 - ~Comprehensive Pydantic Type Testing:~
-    - ~`EmailStr`, `HttpUrl`~
-    - ~`UUID4`, `Json`, `SecretStr`~
-    - ~Custom Pydantic validators and constraints~
-    - ~`Field()` with validation, description, examples~
-    - ~Annotated types with metadata~
+  - ~`EmailStr`, `HttpUrl`~
+  - ~`UUID4`, `Json`, `SecretStr`~
+  - ~Custom Pydantic validators and constraints~
+  - ~`Field()` with validation, description, examples~
+  - ~Annotated types with metadata~
 - ~Test mapping to complex types:~
-    - ~`List[CustomType]`, `Dict[str, CustomType]`~
-    - ~`Union` types, `Literal` types~
-    - ~Custom Pydantic models as field types~
-- - ~Test mapping relationships to other DTO types.~
+  - ~`List[CustomType]`, `Dict[str, CustomType]`~
+  - ~`Union` types, `Literal` types~
+  - ~Custom Pydantic models as field types~
+- ~Test mapping relationships to other DTO types.~
 - Test circular mapping references.
 - ~**New:** Test mapping same field to different types in different DTOs.~
 - ~**New:** Test mapping fields that don't exist in SQLAlchemy model (should error).~
-- Test mapping with inheritance (parent class mappings).
+- ~Test mapping with inheritance (parent class mappings).~
 
 ### Field Exclusion (`exclude` parameter) (Enhanced)
 - ~Test excluding various field types (columns, relationships, hybrids).~
@@ -83,9 +83,9 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 ### Model Naming (Enhanced)
 **Test Suite:** `test_model_naming.py`
 - ~Test all naming configuration combinations:~
-    - ~`model_name` override~
-    - ~`model_name_prefix` + `model_name_suffix`~
-    - ~Default naming patterns~
+  - ~`model_name` override~
+  - ~`model_name_prefix` + `model_name_suffix`~
+  - ~Default naming patterns~
 - **New:** Test name conflicts and resolution.
 - **New:** Test very long names (edge case).
 - **New:** Test names with special characters.
@@ -108,8 +108,8 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 - ~Test overriding SQLAlchemy defaults.~
 - ~Test setting defaults for required fields.~
 - ~Test defaults for excluded fields (should be ignored).~
-- ~- ~Test callable vs static defaults.~~
-- - ~Test defaults that don't match field types (should validate).~
+- ~Test callable vs static defaults.~
+- ~Test defaults that don't match field types (should validate).~
 
 ### Required Field Logic (New Section)
 - ~Test logic: not nullable and no default = required.~
@@ -122,62 +122,61 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 ### SQLAlchemy Model Inheritance (More Detailed)
 **Test Suite:** `test_inheritance.py`
 - ~Single Table Inheritance:~
-    - ~Test parent and child DTOs.~
-    - - ~Test discriminator column handling.~
-    - - ~Test inherited field exclusion/mapping.~
+  - ~Test parent and child DTOs.~
+  - ~Test discriminator column handling.~
+  - ~Test inherited field exclusion/mapping.~
 - ~Joined Table Inheritance:~
-    - ~Test field distribution across tables.~
-    - Test foreign key relationships between parent/child.
-- Concrete Table Inheritance:
-    - - ~Test independent table DTOs.~
+  - ~Test field distribution across tables.~
+  - Test foreign key relationships between parent/child.
+- ~Concrete Table Inheritance:~
+  - ~Test independent table DTOs.~
 - ~Mixin Classes:~
-    - ~Test DTOs from models with mixins.~
-    - Test mixin field inheritance.
+  - ~Test DTOs from models with mixins.~
+  - ~Test mixin field inheritance.~
 - ~Abstract Base Classes:~
-    - ~Test that abstract models can't create DTOs directly.~
+  - ~Test that abstract models can't create DTOs directly.~
 
 ### Relationships (Comprehensive New Section)
 **Test Suite:** `test_relationships.py`
 - ~One-to-Many:~
-    - ~Test parent DTO including children collection.~
-    - ~Test child DTO excluding parent reference.~
-    - Test lazy loading behavior preservation.
-- Many-to-One:
-    - - ~Test foreign key field handling.~
-    - - ~Test relationship object inclusion.~
-- Many-to-Many:
-    - - ~Test association table handling.~
-    - - ~Test through-model relationships.~
+  - ~Test parent DTO including children collection.~
+  - ~Test child DTO excluding parent reference.~
+  - Test lazy loading behavior preservation.
+- ~Many-to-One:~
+  - ~Test foreign key field handling.~
+  - ~Test relationship object inclusion.~
+- ~Many-to-Many:~
+  - ~Test association table handling.~
+  - ~Test through-model relationships.~
 - ~Self-Referential:~
-    - ~Test tree structures, hierarchical data.~
-- Advanced Relationship Options:
-    - - ~`back_populates`, `backref` handling.~
-    - - ~`cascade` option preservation.~
-    - - ~`secondary` table relationships.~
-    - - ~`secondary` table relationships.~
-- Relationship Mapping:
-    - ~- ~Test mapping relationships to other DTO types.~~
-    - ~- ~Test circular DTO references.~~
-    - - ~Test relationship validation.~
+  - ~Test tree structures, hierarchical data.~
+- ~Advanced Relationship Options:~
+  - ~`back_populates`, `backref` handling.~
+  - `cascade` option preservation.
+  - `secondary` table relationships.
+- ~Relationship Mapping:~
+  - ~Test mapping relationships to other DTO types.~
+  - ~Test circular DTO references.~
+  - ~Test relationship validation.~
 
 ## 5. Advanced Features (Enhanced)
 
 ### Caching (More Thorough)
 **Test Suite:** `test_caching.py`
-- ~- ~- ~Test cache key generation uniqueness.~~~
-- ~- ~- ~Test that functionally identical configs share cache.~~~
-- ~- ~- ~Test cache invalidation scenarios.~~~
-- ~- ~- ~**New:** Test cache size limits and LRU behavior.~~~
-- ~- ~- ~**New:** Test thread safety of cache.~~~
-- ~- ~- ~**New:** Test cache memory leaks with many models.~~~
-- ~- ~- ~**New:** Test cache behavior with dynamic imports.~~~
+- ~Test cache key generation uniqueness.~
+- ~Test that functionally identical configs share cache.~
+- ~Test cache invalidation scenarios.~
+- ~**New:** Test cache size limits and LRU behavior.~
+- ~**New:** Test thread safety of cache.~
+- ~**New:** Test cache memory leaks with many models.~
+- ~**New:** Test cache behavior with dynamic imports.~
 
 ### Pydantic Configuration (Comprehensive)
 **Test Suite:** `test_pydantic_config.py`
 - ~Test all `ConfigDict` options:~
-    - ~`validate_assignment`, `use_enum_values`, `populate_by_name`~
-    - ~`str_strip_whitespace`, `json_schema_extra`~
-    - ~`frozen`, `extra='forbid'/'allow'/'ignore'`~
+  - ~`validate_assignment`, `use_enum_values`, `populate_by_name`~
+  - ~`str_strip_whitespace`, `json_schema_extra`~
+  - ~`frozen`, `extra='forbid'/'allow'/'ignore'`~
 - ~Test custom serialization (`model_serializer`).~
 - ~Test custom validation (`field_validator`, `model_validator`).~
 - ~**New:** Test JSON schema generation options.~
@@ -187,27 +186,27 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 
 ### Invalid Configurations (Comprehensive)
 **Test Suite:** `test_error_handling.py`
-- SQLAlchemy Model Issues:
-    - Non-`MappedAsDataclass` models (should error clearly).
-    - Models without `__tablename__`.
-    - Models with `__abstract__ = True`.
-- Configuration Conflicts:
-    - ~Mapping non-existent fields.~
-    - Excluding and including same field.
-    - Invalid type mappings (non-type objects).
-- Type System Issues:
-    - Mapping to incompatible types.
-    - Generic type edge cases.
+- ~SQLAlchemy Model Issues:~
+  - ~Non-`MappedAsDataclass` models (should error clearly).~
+  - ~Models without `__tablename__`.~
+  - ~Models with `__abstract__ = True`.~
+- ~Configuration Conflicts:~
+  - ~Mapping non-existent fields.~
+  - ~Excluding and including same field.~
+  - ~Invalid type mappings (non-type objects).~
+- ~Type System Issues:~
+  - ~Mapping to incompatible types.~
+  - ~Generic type edge cases.~
 
 ### Complex SQLAlchemy Features (New Section)
 **Test Suite:** `test_complex_sqlalchemy.py`
-- Hybrid Properties: ~Test inclusion/exclusion, type detection.~
-- Association Objects: Test many-to-many through objects.
+- ~Hybrid Properties: Test inclusion/exclusion, type detection.~
+- ~Association Objects: Test many-to-many through objects.~
 - Synonyms: Test field aliasing.
 - Column Properties: Test computed columns, SQL expressions.
-- Custom Types: Test user-defined column types.
+- ~Custom Types: Test user-defined column types.~
 - Multiple Schemas: Test cross-schema relationships.
-- Polymorphic Models: Test `polymorphic_on`, `with_polymorphic`.
+- ~Polymorphic Models: Test `polymorphic_on`, `with_polymorphic`.~
 
 ### Memory and Performance (Enhanced)
 **Test Suite:** `test_performance.py`
@@ -247,7 +246,6 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 - Session Integration:
     - `model_validate()` with session-loaded objects.
     - Lazy loading interaction.
-    - Session expiry handling.
     - Session expiry handling.
 - Query Integration:
     - DTOs from query results.
@@ -436,3 +434,4 @@ tests/
 │   ├── factories.py              # Data factories
 │   └── profiling.py              # Performance measurement
 └── conftest.py                    # Global pytest configuration
+```

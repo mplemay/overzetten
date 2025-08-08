@@ -11,16 +11,16 @@ from typing import (
     Generic,
     Annotated,
 )
-from sqlalchemy.orm import MappedAsDataclass, Mapped
+from sqlalchemy.orm import DeclarativeBase, Mapped
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy import inspect, Sequence
 from pydantic import BaseModel, ConfigDict, create_model, Field
 from pydantic.fields import FieldInfo
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, is_dataclass
 import collections.abc
 
 
-T = TypeVar("T", bound=MappedAsDataclass)
+T = TypeVar("T", bound=DeclarativeBase)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -109,7 +109,7 @@ class DTOMeta(type):
 
     @staticmethod
     def _generate_model_name(
-        sqlalchemy_model: Type[MappedAsDataclass], config: DTOConfig
+        sqlalchemy_model: Type[DeclarativeBase], config: DTOConfig
     ) -> str:
         """Generate a model name based on the SQLAlchemy model and config."""
         base_name = sqlalchemy_model.__name__
@@ -117,7 +117,7 @@ class DTOMeta(type):
 
     @staticmethod
     def _create_pydantic_model(
-        sqlalchemy_model: Type[MappedAsDataclass], config: DTOConfig
+        sqlalchemy_model: Type[DeclarativeBase], config: DTOConfig
     ) -> Type[BaseModel]:
         """Create a Pydantic model from SQLAlchemy model using DTO config."""
 
@@ -141,7 +141,7 @@ class DTOMeta(type):
 
     @staticmethod
     def _extract_fields(
-        sqlalchemy_model: Type[MappedAsDataclass], config: DTOConfig
+        sqlalchemy_model: Type[DeclarativeBase], config: DTOConfig
     ) -> Dict[str, Any]:
         """Extract fields from SQLAlchemy model and convert to Pydantic format."""
         fields = {}
@@ -149,21 +149,15 @@ class DTOMeta(type):
         # Get SQLAlchemy inspector
         if not hasattr(sqlalchemy_model, "__table__"):
             raise TypeError(
-                f"Cannot create DTO from abstract or unmapped SQLAlchemy model '{sqlalchemy_model.__name__}'."
+                f"Cannot create DTO from abstract or unmapped SQLAlchemy model '{(sqlalchemy_model.__name__)}'."
             )
+        
         inspector = inspect(sqlalchemy_model)
 
         # Process each column
         for column_name, column in inspector.columns.items():
             attr = getattr(sqlalchemy_model, column_name)
-            # Exclude fields with init=False (dataclass-specific)
-            # Check __dataclass_fields__ for the init parameter
-            if (
-                hasattr(sqlalchemy_model, "__dataclass_fields__")
-                and column_name in sqlalchemy_model.__dataclass_fields__
-                and sqlalchemy_model.__dataclass_fields__[column_name].init is False
-            ):
-                continue
+            
 
             # Apply include/exclude logic
             if not DTOMeta._should_include_field(attr, config):
@@ -183,8 +177,8 @@ class DTOMeta(type):
                 sqlalchemy_model, mapped_attr.key
             ):
                 raise ValueError(
-                    f"Mapped attribute '{mapped_attr.key}' does not exist on SQLAlchemy model "
-                    f"'{sqlalchemy_model.__name__}'."
+                    f"Mapped attribute '{(mapped_attr.key)}' does not exist on SQLAlchemy model "
+                    f"'{(sqlalchemy_model.__name__)}'."
                 )
 
         # Process relationships if enabled
@@ -230,7 +224,7 @@ class DTOMeta(type):
 
     @staticmethod
     def _get_field_type(
-        sqlalchemy_model: Type[MappedAsDataclass],
+        sqlalchemy_model: Type[DeclarativeBase],
         attr: InstrumentedAttribute,
         column,
         config: DTOConfig,

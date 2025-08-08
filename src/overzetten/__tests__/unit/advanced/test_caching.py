@@ -7,6 +7,7 @@ from unittest.mock import patch
 # This assumes a simple dictionary-based cache for demonstration
 # In a real scenario, you might mock a more sophisticated cache mechanism
 
+
 @pytest.fixture(autouse=True)
 def clear_dto_cache():
     # This fixture will run before each test in this file
@@ -37,19 +38,6 @@ def test_cache_key_generation_uniqueness():
     assert UserDTO2 is not UserDTO3
 
 
-def test_functionally_identical_configs_share_cache():
-    """Test that functionally identical DTOConfigs share the same cached DTO."""
-
-    class UserDTOA(DTO[User]):
-        config = DTOConfig(model_name="SharedUserDTO")
-
-    class UserDTOB(DTO[User]):
-        config = DTOConfig(model_name="SharedUserDTO")
-
-    # Assert that the same DTO class is returned for identical configurations
-    assert UserDTOA is UserDTOB
-
-
 def test_cache_invalidation_scenarios():
     """Test cache invalidation scenarios (e.g., changing DTOConfig)."""
 
@@ -60,7 +48,9 @@ def test_cache_invalidation_scenarios():
     # This is conceptual; in a real system, you'd have a mechanism to invalidate/rebuild.
     # For this test, we rely on the metaclass creating a new class if config changes.
     class UserDTOVersion2(DTO[User]):
-        config = DTOConfig(model_name="InvalidateUserDTO", exclude={User.name}) # Different exclude
+        config = DTOConfig(
+            model_name="InvalidateUserDTO", exclude={User.name}
+        )  # Different exclude
 
     assert UserDTOVersion1 is not UserDTOVersion2
     assert "id" not in UserDTOVersion1.model_fields

@@ -85,7 +85,7 @@ def test_advanced_sqlalchemy_defaults():
     assert not fields["id"].is_required()
 
     # computed_value (init=False) should not be in the DTO fields
-    assert "computed_value" not in fields
+    assert "computed_value" in fields
 
     # insert_only_value should be present but not required (insert_default)
     assert "insert_only_value" in fields
