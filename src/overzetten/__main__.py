@@ -1,24 +1,24 @@
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import (
+    Annotated,
     Any,
     Dict,
+    Generic,
+    Optional,
     Set,
     Type,
-    Optional,
-    get_origin,
-    get_args,
-    Union,
     TypeVar,
-    Generic,
-    Annotated,
+    Union,
+    get_args,
+    get_origin,
 )
+
+from pydantic import BaseModel, ConfigDict, Field, create_model
+from pydantic.fields import FieldInfo
+from sqlalchemy import Sequence, inspect
 from sqlalchemy.orm import DeclarativeBase, Mapped
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from sqlalchemy import inspect, Sequence
-from pydantic import BaseModel, ConfigDict, create_model, Field
-from pydantic.fields import FieldInfo
-from dataclasses import dataclass, field, is_dataclass
-import collections.abc
-
 
 T = TypeVar("T", bound=DeclarativeBase)
 
@@ -40,9 +40,7 @@ class DTOConfig:
     model_name: Optional[str] = None
 
     # Pydantic config
-    pydantic_config: ConfigDict = field(
-        default_factory=lambda: ConfigDict(from_attributes=True)
-    )
+    pydantic_config: ConfigDict = field(default_factory=lambda: ConfigDict(from_attributes=True))
 
     # Base model to inherit from
     base_model: Type[BaseModel] = BaseModel
@@ -88,9 +86,7 @@ class DTOMeta(type):
         # If this is a concrete DTO, create it as a Pydantic model
         if is_concrete_dto and sqlalchemy_model is not None:
             # Generate model name
-            model_name = config.model_name or mcs._generate_model_name(
-                sqlalchemy_model, config
-            )
+            model_name = config.model_name or mcs._generate_model_name(sqlalchemy_model, config)
 
             # Use our mapper to create the Pydantic model
             pydantic_model = mcs._create_pydantic_model(sqlalchemy_model, config)
@@ -100,9 +96,6 @@ class DTOMeta(type):
             pydantic_model.__name__ = model_name
             pydantic_model.__qualname__ = model_name
             pydantic_model.__module__ = namespace.get("__module__")
-            
-
-            
 
             return pydantic_model
         else:
@@ -110,23 +103,16 @@ class DTOMeta(type):
             return super().__new__(mcs, name, bases, namespace)
 
     @staticmethod
-    def _generate_model_name(
-        sqlalchemy_model: Type[DeclarativeBase], config: DTOConfig
-    ) -> str:
+    def _generate_model_name(sqlalchemy_model: Type[DeclarativeBase], config: DTOConfig) -> str:
         """Generate a model name based on the SQLAlchemy model and config."""
         base_name = sqlalchemy_model.__name__
         return f"{config.model_name_prefix}{base_name}{config.model_name_suffix}"
 
     @staticmethod
-    def _create_pydantic_model(
-        sqlalchemy_model: Type[DeclarativeBase], config: DTOConfig
-    ) -> Type[BaseModel]:
+    def _create_pydantic_model(sqlalchemy_model: Type[DeclarativeBase], config: DTOConfig) -> Type[BaseModel]:
         """Create a Pydantic model from SQLAlchemy model using DTO config."""
-
         # Generate model name
-        model_name = config.model_name or DTOMeta._generate_model_name(
-            sqlalchemy_model, config
-        )
+        model_name = config.model_name or DTOMeta._generate_model_name(sqlalchemy_model, config)
 
         # Extract fields from SQLAlchemy model
         fields = DTOMeta._extract_fields(sqlalchemy_model, config)
@@ -142,9 +128,7 @@ class DTOMeta(type):
         return pydantic_model
 
     @staticmethod
-    def _extract_fields(
-        sqlalchemy_model: Type[DeclarativeBase], config: DTOConfig
-    ) -> Dict[str, Any]:
+    def _extract_fields(sqlalchemy_model: Type[DeclarativeBase], config: DTOConfig) -> Dict[str, Any]:
         """Extract fields from SQLAlchemy model and convert to Pydantic format."""
         fields = {}
 
@@ -153,13 +137,12 @@ class DTOMeta(type):
             raise TypeError(
                 f"Cannot create DTO from abstract or unmapped SQLAlchemy model '{(sqlalchemy_model.__name__)}'."
             )
-        
+
         inspector = inspect(sqlalchemy_model)
 
         # Process each column
         for column_name, column in inspector.columns.items():
             attr = getattr(sqlalchemy_model, column_name)
-            
 
             # Apply include/exclude logic
             if not DTOMeta._should_include_field(attr, config):
@@ -175,13 +158,24 @@ class DTOMeta(type):
 
         # Validate mapped fields that are not columns
         for mapped_attr, _ in config.mapped.items():
-            if isinstance(mapped_attr, InstrumentedAttribute) and not hasattr(
-                sqlalchemy_model, mapped_attr.key
-            ):
+            if isinstance(mapped_attr, InstrumentedAttribute) and not hasattr(sqlalchemy_model, mapped_attr.key):
                 raise ValueError(
                     f"Mapped attribute '{(mapped_attr.key)}' does not exist on SQLAlchemy model "
                     f"'{(sqlalchemy_model.__name__)}'."
                 )
+
+        for synonym_name, synonym_obj in inspector.synonyms.items():
+            attr = getattr(sqlalchemy_model, synonym_name)
+            if not DTOMeta._should_include_field(attr, config):
+                continue
+
+            # Get the column that the synonym refers to
+            column = inspector.columns.get(synonym_obj.name)
+
+            field_type = DTOMeta._get_field_type(sqlalchemy_model, attr, column, config)
+            default_value = DTOMeta._get_field_default(attr, column, config)
+
+            fields[synonym_name] = (field_type, default_value)
 
         # Process relationships if enabled
         if config.include_relationships:
@@ -246,10 +240,7 @@ class DTOMeta(type):
                 field_type = mapped_value
         else:
             # Try to get the type from the Mapped annotation first
-            if (
-                hasattr(sqlalchemy_model, "__annotations__")
-                and attr.key in sqlalchemy_model.__annotations__
-            ):
+            if hasattr(sqlalchemy_model, "__annotations__") and attr.key in sqlalchemy_model.__annotations__:
                 mapped_annotation = sqlalchemy_model.__annotations__[attr.key]
                 # Extract the inner type from Mapped[T]
                 if get_origin(mapped_annotation) is Mapped:
@@ -265,19 +256,13 @@ class DTOMeta(type):
                 field_type = column.type.python_type
 
         # Handle nullable columns
-        if (
-            column is not None
-            and column.nullable
-            and not DTOMeta._is_optional_type(field_type)
-        ):
+        if column is not None and column.nullable and not DTOMeta._is_optional_type(field_type):
             field_type = Optional[field_type]
 
         return field_type
 
     @staticmethod
-    def _get_field_default(
-        attr: InstrumentedAttribute, column, config: DTOConfig
-    ) -> Any:
+    def _get_field_default(attr: InstrumentedAttribute, column, config: DTOConfig) -> Any:
         """Get the default value for a field."""
         # Check for a mapped Field() object first
         if attr in config.mapped:
@@ -285,16 +270,14 @@ class DTOMeta(type):
             if isinstance(mapped_value, FieldInfo):
                 return mapped_value
             elif get_origin(mapped_value) is Annotated:  # Add this block
-                for arg in get_args(mapped_value)[
-                    1:
-                ]:  # Iterate through metadata arguments
+                for arg in get_args(mapped_value)[1:]:  # Iterate through metadata arguments
                     if isinstance(arg, FieldInfo):
                         return arg  # Return the FieldInfo object
 
         # Check custom defaults
         if attr in config.field_defaults:
             custom_default = config.field_defaults[attr]
-            if isinstance(custom_default, collections.abc.Callable):
+            if isinstance(custom_default, Callable):
                 return Field(default_factory=custom_default)
             return custom_default
 
@@ -309,9 +292,7 @@ class DTOMeta(type):
                 if isinstance(column.default, Sequence):
                     return None  # Sequences are handled by DB, not Pydantic default
                 # Handle callable defaults from SQLAlchemy
-                elif hasattr(column.default, "arg") and isinstance(
-                    column.default.arg, collections.abc.Callable
-                ):
+                elif hasattr(column.default, "arg") and isinstance(column.default.arg, Callable):
                     return Field(default_factory=column.default.arg)
                 # Handle scalar defaults from SQLAlchemy
                 elif hasattr(column.default, "arg"):

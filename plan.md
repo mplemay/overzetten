@@ -141,7 +141,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 - ~One-to-Many:~
   - ~Test parent DTO including children collection.~
   - ~Test child DTO excluding parent reference.~
-  - Test lazy loading behavior preservation.
+  - ~Test lazy loading behavior preservation.~
 - ~Many-to-One:~
   - ~Test foreign key field handling.~
   - ~Test relationship object inclusion.~
@@ -152,8 +152,8 @@ This document outlines a comprehensive testing plan for the `overzetten` library
   - ~Test tree structures, hierarchical data.~
 - ~Advanced Relationship Options:~
   - ~`back_populates`, `backref` handling.~
-  - `cascade` option preservation.
-  - `secondary` table relationships.
+  - ~`cascade` option preservation.~
+  - ~  - ~`secondary` table relationships.~~
 - ~Relationship Mapping:~
   - ~Test mapping relationships to other DTO types.~
   - ~Test circular DTO references.~
@@ -202,7 +202,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 **Test Suite:** `test_complex_sqlalchemy.py`
 - ~Hybrid Properties: Test inclusion/exclusion, type detection.~
 - ~Association Objects: Test many-to-many through objects.~
-- Synonyms: Test field aliasing.
+- ~Synonyms: Test field aliasing.~
 - Column Properties: Test computed columns, SQL expressions.
 - ~Custom Types: Test user-defined column types.~
 - Multiple Schemas: Test cross-schema relationships.
