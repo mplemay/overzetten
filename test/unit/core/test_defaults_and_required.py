@@ -2,7 +2,7 @@ from overzetten import DTO, DTOConfig
 from fixtures.sqlalchemy_models import DefaultValueTestModel, User
 
 
-def test_default_values_and_required_fields(db_engine):
+def test_default_values_and_required_fields():
     """Test handling of SQLAlchemy defaults and required fields."""
 
     class DefaultValueTestDTO(DTO[DefaultValueTestModel]):
@@ -20,7 +20,7 @@ def test_default_values_and_required_fields(db_engine):
     assert fields["required_field"].is_required()
 
 
-def test_custom_defaults(db_engine):
+def test_custom_defaults():
     """Test setting custom defaults with field_defaults."""
 
     class CustomDefaultDTO(DTO[DefaultValueTestModel]):
@@ -40,7 +40,7 @@ def test_custom_defaults(db_engine):
     assert fields["required_field"].default == "custom_default"
 
 
-def test_server_default(db_engine):
+def test_server_default():
     """Test handling of server_default."""
 
     class ServerDefaultDTO(DTO[DefaultValueTestModel]):
@@ -54,7 +54,7 @@ def test_server_default(db_engine):
     assert fields["server_default_field"].default is None
 
 
-def test_defaults_for_excluded_fields_ignored(db_engine):
+def test_defaults_for_excluded_fields_ignored():
     """Test that field_defaults for excluded fields are ignored."""
 
     class UserExcludedWithDefaultDTO(DTO[User]):

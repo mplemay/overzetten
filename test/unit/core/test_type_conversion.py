@@ -17,7 +17,7 @@ from fixtures.sqlalchemy_models import (
 import uuid
 
 
-def test_type_conversion(db_engine):
+def test_type_conversion():
     """Test conversion of all basic SQLAlchemy types."""
 
     class TypeConversionTestDTO(DTO[TypeConversionTestModel]):
@@ -37,7 +37,7 @@ def test_type_conversion(db_engine):
     assert fields["large_binary_field"].annotation == bytes
 
 
-def test_custom_sqlalchemy_type(db_engine):
+def test_custom_sqlalchemy_type():
     """Test a custom SQLAlchemy type with python_type property."""
 
     class CustomTypeDTO(DTO[CustomTypeModel]):
@@ -47,7 +47,7 @@ def test_custom_sqlalchemy_type(db_engine):
     assert fields["custom_field"].annotation == int
 
 
-def test_mapped_annotations_vs_raw_column_types(db_engine):
+def test_mapped_annotations_vs_raw_column_types():
     """Test handling of Mapped[T] annotations vs raw column types."""
 
     class MappedAnnotationDTO(DTO[MappedAnnotationTestModel]):
@@ -58,7 +58,7 @@ def test_mapped_annotations_vs_raw_column_types(db_engine):
     assert fields["raw_str"].annotation == str
 
 
-def test_generic_type_conversion(db_engine):
+def test_generic_type_conversion():
     """Test type conversion with generic types (Mapped[List[str]], Mapped[Dict[str, int]])."""
 
     class GenericMappedDTO(DTO[GenericMappedTestModel]):
@@ -69,7 +69,7 @@ def test_generic_type_conversion(db_engine):
     assert fields["dict_of_int"].annotation == Optional[Dict[str, int]]
 
 
-def test_postgresql_specific_types(db_engine):
+def test_postgresql_specific_types():
     """Test PostgreSQL-specific types (UUID, JSONB, ARRAY, ENUM)."""
 
     class PostgresSpecificTypesDTO(DTO[PostgresSpecificTypesModel]):
@@ -94,7 +94,7 @@ def test_mysql_specific_types():
     assert fields["enum_field"].annotation == MySQLEnum
 
 
-def test_sqlite_specific_types(db_engine):
+def test_sqlite_specific_types():
     """Test SQLite-specific types (boolean as int, date/time as text)."""
 
     class SQLiteSpecificTypesDTO(DTO[SQLiteSpecificTypesModel]):

@@ -14,7 +14,7 @@ from fixtures.sqlalchemy_models import (
 )
 
 
-def test_single_table_inheritance(db_engine):
+def test_single_table_inheritance():
     """Test DTO creation from models with single table inheritance."""
 
     class EmployeeDTO(DTO[Employee]):
@@ -34,7 +34,7 @@ def test_single_table_inheritance(db_engine):
     assert list(EngineerDTO.model_fields.keys()) == ["id", "type", "engineer_info"]
 
 
-def test_joined_table_inheritance_field_distribution(db_engine):
+def test_joined_table_inheritance_field_distribution():
     """Test DTO creation from models with joined table inheritance, ensuring all fields are present."""
 
     class BaseMappedDTO(DTO[BaseMappedModel]):
@@ -57,7 +57,7 @@ def test_joined_table_inheritance_field_distribution(db_engine):
     assert "child_field" in child_fields
 
 
-def test_mixin_inheritance(db_engine):
+def test_mixin_inheritance():
     """Test DTO creation from models that use mixin classes."""
 
     class ProductDTO(DTO[Product]):
@@ -76,7 +76,7 @@ def test_mixin_inheritance(db_engine):
     assert fields["updated_at"].annotation == datetime.datetime
 
 
-def test_abstract_base_model_dto_creation(db_engine):
+def test_abstract_base_model_dto_creation():
     """Test that DTOs cannot be created directly from abstract SQLAlchemy models."""
     with pytest.raises(
         TypeError, match="Cannot create DTO from abstract or unmapped SQLAlchemy model"

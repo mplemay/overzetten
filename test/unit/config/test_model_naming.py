@@ -2,7 +2,7 @@ from overzetten import DTO, DTOConfig
 from fixtures.sqlalchemy_models import User
 
 
-def test_model_name_override(db_engine):
+def test_model_name_override():
     """Test the model_name override."""
 
     class CustomNameDTO(DTO[User]):
@@ -12,7 +12,7 @@ def test_model_name_override(db_engine):
     assert CustomNameDTO.__qualname__ == "MyCustomUserModel"
 
 
-def test_model_name_prefix_and_suffix(db_engine):
+def test_model_name_prefix_and_suffix():
     """Test the model_name_prefix and model_name_suffix."""
 
     class PrefixedSuffixedDTO(DTO[User]):
@@ -22,7 +22,7 @@ def test_model_name_prefix_and_suffix(db_engine):
     assert PrefixedSuffixedDTO.__qualname__ == "PrefixUserSuffix"
 
 
-def test_default_model_naming(db_engine):
+def test_default_model_naming():
     """Test the default model naming pattern."""
 
     class UserDTO(DTO[User]):
@@ -32,7 +32,7 @@ def test_default_model_naming(db_engine):
     assert UserDTO.__qualname__ == "UserDTO"
 
 
-def test_naming_does_not_affect_functionality(db_engine):
+def test_naming_does_not_affect_functionality():
     """Test that naming doesn't affect the functionality of the DTO."""
 
     class MyDTO(DTO[User]):

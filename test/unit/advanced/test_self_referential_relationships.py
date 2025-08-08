@@ -4,7 +4,7 @@ from overzetten import DTO, DTOConfig
 from fixtures.sqlalchemy_models import Node
 
 
-def test_self_referential_relationship_mapping(db_engine):
+def test_self_referential_relationship_mapping():
     """Test handling of self-referential relationships with explicit DTO mapping."""
 
     class NodeDTO(DTO[Node]):

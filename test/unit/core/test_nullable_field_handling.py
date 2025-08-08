@@ -5,7 +5,7 @@ from overzetten import DTO, DTOConfig
 from fixtures.sqlalchemy_models import NullableTestModel
 
 
-def test_nullable_field_handling(db_engine):
+def test_nullable_field_handling():
     """Test that nullable fields become Optional[T] correctly."""
 
     class NullableTestDTO(DTO[NullableTestModel]):
@@ -18,7 +18,7 @@ def test_nullable_field_handling(db_engine):
     assert fields["already_optional_field"].annotation == Optional[int]
 
 
-def test_no_double_optional_wrapping(db_engine):
+def test_no_double_optional_wrapping():
     """Test that Optional[T] fields aren't double-wrapped."""
 
     class NullableTestDTO(DTO[NullableTestModel]):
@@ -32,7 +32,7 @@ def test_no_double_optional_wrapping(db_engine):
     )
 
 
-def test_nullable_field_with_custom_type_mapping(db_engine):
+def test_nullable_field_with_custom_type_mapping():
     """Test nullable fields with custom type mappings (nullable + EmailStr -> Optional[EmailStr])."""
 
     class NullableEmailDTO(DTO[NullableTestModel]):

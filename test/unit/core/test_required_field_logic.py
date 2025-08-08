@@ -4,7 +4,7 @@ from fixtures.sqlalchemy_models import RequiredFieldTestModel
 from overzetten import DTO, DTOConfig
 
 
-def test_required_no_default(db_engine):
+def test_required_no_default():
     """Test that not nullable fields with no default become required."""
 
     class RequiredDTO(DTO[RequiredFieldTestModel]):
@@ -15,7 +15,7 @@ def test_required_no_default(db_engine):
     assert fields["required_no_default"].annotation is str
 
 
-def test_nullable_no_default(db_engine):
+def test_nullable_no_default():
     """Test that nullable fields with no default become Optional[T] with None default."""
 
     class NullableDTO(DTO[RequiredFieldTestModel]):
@@ -27,7 +27,7 @@ def test_nullable_no_default(db_engine):
     assert fields["nullable_no_default"].default is None
 
 
-def test_required_with_default(db_engine):
+def test_required_with_default():
     """Test that not nullable fields with a default become T with default."""
 
     class DefaultDTO(DTO[RequiredFieldTestModel]):
@@ -39,7 +39,7 @@ def test_required_with_default(db_engine):
     assert fields["required_with_default"].default == "default_value"
 
 
-def test_nullable_with_default(db_engine):
+def test_nullable_with_default():
     """Test that nullable fields with a default become Optional[T] with default."""
 
     class NullableDefaultDTO(DTO[RequiredFieldTestModel]):
@@ -51,7 +51,7 @@ def test_nullable_with_default(db_engine):
     assert fields["nullable_with_default"].default == "nullable_default"
 
 
-def test_required_with_server_default(db_engine):
+def test_required_with_server_default():
     """Test that not nullable fields with a server_default become T with default."""
 
     class ServerDefaultDTO(DTO[RequiredFieldTestModel]):
@@ -68,7 +68,7 @@ def test_required_with_server_default(db_engine):
     )  # Pydantic default is None if not explicitly set
 
 
-def test_nullable_with_server_default(db_engine):
+def test_nullable_with_server_default():
     """Test that nullable fields with a server_default become Optional[T] with None default."""
 
     class NullableServerDefaultDTO(DTO[RequiredFieldTestModel]):
@@ -80,7 +80,7 @@ def test_nullable_with_server_default(db_engine):
     assert fields["nullable_with_server_default"].default is None
 
 
-def test_boolean_with_default(db_engine):
+def test_boolean_with_default():
     """Test boolean fields with a default value."""
 
     class BooleanDefaultDTO(DTO[RequiredFieldTestModel]):
@@ -92,7 +92,7 @@ def test_boolean_with_default(db_engine):
     assert fields["boolean_with_default"].default is False
 
 
-def test_interaction_with_custom_field_defaults(db_engine):
+def test_interaction_with_custom_field_defaults():
     """Test interaction with custom field_defaults in DTOConfig."""
 
     class CustomDefaultsDTO(DTO[RequiredFieldTestModel]):

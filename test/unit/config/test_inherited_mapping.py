@@ -4,7 +4,7 @@ from overzetten import DTO, DTOConfig
 from fixtures.sqlalchemy_models import BaseMappedModel, ChildMappedModel
 
 
-def test_mapping_with_inheritance(db_engine):
+def test_mapping_with_inheritance():
     """Test that mapped configurations are correctly applied with inheritance."""
 
     class BaseMappedDTO(DTO[BaseMappedModel]):

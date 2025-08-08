@@ -4,7 +4,7 @@ from overzetten import DTO, DTOConfig
 from fixtures.sqlalchemy_models import User
 
 
-def test_field_inclusion(db_engine):
+def test_field_inclusion():
     """Test including only a specific subset of fields."""
 
     class UserIncludedDTO(DTO[User]):
@@ -16,7 +16,7 @@ def test_field_inclusion(db_engine):
     assert "is_active" not in fields
 
 
-def test_exclude_overrides_include(db_engine):
+def test_exclude_overrides_include():
     """Test that exclude takes precedence over include."""
 
     class UserIncludeExcludeDTO(DTO[User]):
@@ -31,7 +31,7 @@ def test_exclude_overrides_include(db_engine):
     assert "age" not in fields
 
 
-def test_empty_include_set(db_engine):
+def test_empty_include_set():
     """Test that an empty include set results in no fields."""
 
     class UserEmptyIncludeDTO(DTO[User]):
@@ -41,7 +41,7 @@ def test_empty_include_set(db_engine):
     assert list(fields.keys()) == []
 
 
-def test_include_with_mapped(db_engine):
+def test_include_with_mapped():
     """Test combining include and mapped configurations."""
 
     class UserIncludeMappedDTO(DTO[User]):

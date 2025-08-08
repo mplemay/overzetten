@@ -9,7 +9,7 @@ from fixtures.sqlalchemy_models import User, UnionLiteralTestModel
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 
-def test_field_mapping_to_pydantic_types(db_engine):
+def test_field_mapping_to_pydantic_types():
     """Test mapping to various Pydantic-specific types."""
 
     class UserMappedDTO(DTO[User]):
@@ -25,7 +25,7 @@ def test_field_mapping_to_pydantic_types(db_engine):
     assert fields["fullname"].annotation == Optional[HttpUrl]
 
 
-def test_field_mapping_with_field_constraints(db_engine):
+def test_field_mapping_with_field_constraints():
     """Test mapping to Pydantic Field with constraints."""
 
     class UserConstrainedDTO(DTO[User]):
@@ -42,7 +42,7 @@ def test_field_mapping_with_field_constraints(db_engine):
     assert any(getattr(m, "max_length", None) == 50 for m in fields["name"].metadata)
 
 
-def test_field_mapping_to_complex_types(db_engine):
+def test_field_mapping_to_complex_types():
     """Test mapping to complex types like List and Dict."""
 
     class UserComplexMapDTO(DTO[User]):
@@ -58,7 +58,7 @@ def test_field_mapping_to_complex_types(db_engine):
     assert fields["tags"].annotation == Optional[List[str]]
 
 
-def test_field_mapping_to_specific_pydantic_types(db_engine):
+def test_field_mapping_to_specific_pydantic_types():
     """Test mapping to UUID4, Json, and SecretStr."""
 
     class UserSpecificMappedDTO(DTO[User]):
@@ -76,7 +76,7 @@ def test_field_mapping_to_specific_pydantic_types(db_engine):
     assert fields["json_field"].annotation == Optional[Json]
 
 
-def test_field_mapping_to_union_literal_and_custom_pydantic_models(db_engine):
+def test_field_mapping_to_union_literal_and_custom_pydantic_models():
     """Test mapping to Union, Literal, and custom Pydantic models."""
 
     class CustomPydanticModel(BaseModel):
@@ -97,7 +97,7 @@ def test_field_mapping_to_union_literal_and_custom_pydantic_models(db_engine):
     assert fields["value"].annotation == CustomPydanticModel
 
 
-def test_mapping_same_field_to_different_types(db_engine):
+def test_mapping_same_field_to_different_types():
     """Test mapping the same SQLAlchemy field to different Pydantic types in different DTOs."""
 
     class UserDTOMappedNameStr(DTO[User]):
@@ -113,7 +113,7 @@ def test_mapping_same_field_to_different_types(db_engine):
     assert UserDTOMappedNameEmail.model_fields["name"].annotation == EmailStr
 
 
-def test_mapping_non_existent_field_errors(db_engine):
+def test_mapping_non_existent_field_errors():
     """Test that mapping a non-existent SQLAlchemy field raises an error."""
 
     # Create a dummy InstrumentedAttribute that doesn't exist on the User model
@@ -134,7 +134,7 @@ def test_mapping_non_existent_field_errors(db_engine):
     )
 
 
-def test_annotated_types_with_metadata(db_engine):
+def test_annotated_types_with_metadata():
     """Test mapping to Annotated types with metadata."""
 
     class UserAnnotatedDTO(DTO[User]):

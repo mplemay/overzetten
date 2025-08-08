@@ -2,7 +2,7 @@ from overzetten import DTO, DTOConfig
 from fixtures.sqlalchemy_models import User, ChildMappedModel, Address
 
 
-def test_field_exclusion(db_engine):
+def test_field_exclusion():
     """Test excluding various field types."""
 
     class UserExcludedDTO(DTO[User]):
@@ -16,7 +16,7 @@ def test_field_exclusion(db_engine):
     assert "age" in fields
 
 
-def test_exclude_all_fields_except_one(db_engine):
+def test_exclude_all_fields_except_one():
     """Test excluding all fields except one (edge case)."""
 
     class UserMinimalDTO(DTO[User]):
@@ -45,7 +45,7 @@ def test_exclude_all_fields_except_one(db_engine):
     assert list(fields.keys()) == ["name"]
 
 
-def test_exclude_overrides_mapped(db_engine):
+def test_exclude_overrides_mapped():
     """Test that exclude takes precedence over mapped."""
 
     class ExcludeMappedDTO(DTO[User]):
@@ -58,7 +58,7 @@ def test_exclude_overrides_mapped(db_engine):
     assert "name" not in fields
 
 
-def test_exclude_inherited_field(db_engine):
+def test_exclude_inherited_field():
     """Test excluding a field inherited from a parent model."""
 
     class ChildMappedExcludedDTO(DTO[ChildMappedModel]):
@@ -71,7 +71,7 @@ def test_exclude_inherited_field(db_engine):
     assert "common_field" in fields
 
 
-def test_exclude_foreign_key_field(db_engine):
+def test_exclude_foreign_key_field():
     """Test excluding a foreign key field."""
 
     class AddressExcludedDTO(DTO[Address]):
@@ -84,7 +84,7 @@ def test_exclude_foreign_key_field(db_engine):
     assert "email_address" in fields
 
 
-def test_exclude_hybrid_property(db_engine):
+def test_exclude_hybrid_property():
     """Test excluding a hybrid property."""
 
     class UserHybridExcludedDTO(DTO[User]):

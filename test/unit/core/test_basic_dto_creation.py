@@ -7,7 +7,7 @@ from overzetten import DTO, DTOConfig
 from fixtures.sqlalchemy_models import User
 
 
-def test_basic_dto_creation(db_engine):
+def test_basic_dto_creation():
     """Test creating a basic DTO with no configuration."""
 
     class UserDTO(DTO[User]):
@@ -52,7 +52,7 @@ def test_basic_dto_creation(db_engine):
     assert fields["data"].annotation == Optional[bytes]
 
 
-def test_dto_naming_and_module(db_engine):
+def test_dto_naming_and_module():
     """Test that __name__, __qualname__, and __module__ are set correctly."""
 
     class UserDTO(DTO[User]):
@@ -63,7 +63,7 @@ def test_dto_naming_and_module(db_engine):
     assert UserDTO.__module__ == __name__  # It should be the module where it's defined
 
 
-def test_multiple_dtos_from_same_model(db_engine):
+def test_multiple_dtos_from_same_model():
     """Test creating multiple DTOs from the same SQLAlchemy model with different configs."""
 
     class UserReadDTO(DTO[User]):
