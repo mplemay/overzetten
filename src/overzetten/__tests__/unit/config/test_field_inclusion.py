@@ -1,7 +1,8 @@
 from pydantic import EmailStr
+from typing import List
 
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.models import User
+from overzetten.__tests__.fixtures.models import User, Address, BaseMappedModel, ChildMappedModel
 
 
 def test_field_inclusion():
@@ -54,3 +55,47 @@ def test_include_with_mapped():
     assert list(fields.keys()) == ["name", "age"]
     assert fields["name"].annotation is EmailStr
     assert fields["age"].annotation is int
+
+
+def test_include_relationships_vs_columns():
+    """Test including relationships vs columns."""
+
+    class AddressDTO(DTO[Address]):
+        config = DTOConfig(include={Address.email_address})
+
+    class UserWithAddressesIncludedDTO(DTO[User]):
+        config = DTOConfig(
+            include={User.name, User.addresses},
+            include_relationships=True,
+            mapped={User.addresses: List[AddressDTO]}
+        )
+
+    fields = UserWithAddressesIncludedDTO.model_fields
+    assert list(fields.keys()) == ["name", "addresses"]
+    assert fields["name"].annotation is str
+    assert fields["addresses"].annotation is List[AddressDTO]
+
+
+def test_include_inherited_fields_selectively():
+    """Test including inherited fields selectively."""
+
+    class ChildMappedIncludedDTO(DTO[ChildMappedModel]):
+        config = DTOConfig(
+            include={ChildMappedModel.id, ChildMappedModel.child_field, ChildMappedModel.common_field}
+        )
+
+    fields = ChildMappedIncludedDTO.model_fields
+    assert set(fields.keys()) == {"id", "child_field", "common_field"}
+    assert fields["id"].annotation is int
+    assert fields["child_field"].annotation is str
+    assert fields["common_field"].annotation is str
+
+    class BaseMappedIncludedDTO(DTO[BaseMappedModel]):
+        config = DTOConfig(
+            include={BaseMappedModel.id, BaseMappedModel.base_field}
+        )
+
+    fields = BaseMappedIncludedDTO.model_fields
+    assert list(fields.keys()) == ["id", "base_field"]
+    assert fields["id"].annotation is int
+    assert fields["base_field"].annotation is str

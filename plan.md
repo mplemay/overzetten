@@ -75,8 +75,8 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 **Test Suite:** `test_field_inclusion.py`
 - ~Test including only specific subset of fields.~
 - ~Test that `exclude` takes precedence over `include`.~
-- Test including relationships vs columns.
-- Test including inherited fields selectively.
+- ~Test including relationships vs columns.~
+- ~Test including inherited fields selectively.~
 - ~Test empty `include` set behavior.~
 - ~Test `include` with `mapped` combinations.~
 
@@ -98,18 +98,18 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 - ~Test scalar defaults (`default=True`, `default='value'`).~
 - ~Test callable defaults (`default=datetime.now`).~
 - ~Test server defaults (`server_default=func.now()`).~
-- **New:** Test `insert_default` vs `default` vs `server_default` handling.
-- **New:** Test defaults with custom type mappings.
-- Test `init=False` fields (should not appear in DTO constructor).
-- **New:** Test autoincrement fields.
-- **New:** Test sequence defaults.
+- ~Test `insert_default` vs `default` vs `server_default` handling.~
+- ~Test defaults with custom type mappings.~
+- ~Test `init=False` fields (should not appear in DTO constructor).~
+- ~Test autoincrement fields.~
+- ~Test sequence defaults.~
 
 ### Custom Defaults (`field_defaults`) (New Focus)
 - ~Test overriding SQLAlchemy defaults.~
 - ~Test setting defaults for required fields.~
 - ~Test defaults for excluded fields (should be ignored).~
-- ~Test callable vs static defaults.~
-- Test defaults that don't match field types (should validate).
+- ~- ~Test callable vs static defaults.~~
+- - ~Test defaults that don't match field types (should validate).~
 
 ### Required Field Logic (New Section)
 - ~Test logic: not nullable and no default = required.~
@@ -123,13 +123,13 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 **Test Suite:** `test_inheritance.py`
 - ~Single Table Inheritance:~
     - ~Test parent and child DTOs.~
-    - Test discriminator column handling.
-    - Test inherited field exclusion/mapping.
+    - - ~Test discriminator column handling.~
+    - - ~Test inherited field exclusion/mapping.~
 - ~Joined Table Inheritance:~
     - ~Test field distribution across tables.~
     - Test foreign key relationships between parent/child.
 - Concrete Table Inheritance:
-    - Test independent table DTOs.
+    - - ~Test independent table DTOs.~
 - ~Mixin Classes:~
     - ~Test DTOs from models with mixins.~
     - Test mixin field inheritance.

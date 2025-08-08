@@ -1,7 +1,7 @@
 import pytest
 import datetime
 
-from overzetten import DTO
+from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import (
     Employee,
     Manager,
@@ -11,6 +11,8 @@ from overzetten.__tests__.fixtures.models import (
     Product,
     AbstractBaseModel,
     ConcreteModel,
+    ConcreteTableBase,
+    ConcreteTableChild,
 )
 
 
@@ -93,3 +95,74 @@ def test_abstract_base_model_dto_creation():
     assert "id" in fields
     assert "abstract_field" in fields
     assert "concrete_field" in fields
+
+
+def test_discriminator_column_handling():
+    """Test that the discriminator column is included in single table inheritance DTOs."""
+
+    class EmployeeDTO(DTO[Employee]):
+        pass
+
+    class ManagerDTO(DTO[Manager]):
+        pass
+
+    class EngineerDTO(DTO[Engineer]):
+        pass
+
+    # The 'type' column is the discriminator and should be present
+    assert "type" in EmployeeDTO.model_fields
+    assert "type" in ManagerDTO.model_fields
+    assert "type" in EngineerDTO.model_fields
+    assert EmployeeDTO.model_fields["type"].annotation is str
+
+
+def test_inherited_field_exclusion_and_mapping():
+    """Test inherited field exclusion and mapping in joined table inheritance."""
+
+    class BaseMappedDTO(DTO[BaseMappedModel]):
+        config = DTOConfig(
+            exclude={BaseMappedModel.base_field},
+            mapped={BaseMappedModel.common_field: str} # Ensure it's explicitly str
+        )
+
+    class ChildMappedDTO(DTO[ChildMappedModel]):
+        config = DTOConfig(
+            exclude={ChildMappedModel.child_field},
+            mapped={ChildMappedModel.common_field: str} # Ensure it's explicitly str
+        )
+
+    # Base DTO should exclude base_field and map common_field
+    base_fields = BaseMappedDTO.model_fields
+    assert "base_field" not in base_fields
+    assert base_fields["common_field"].annotation is str
+    assert "id" in base_fields
+
+    # Child DTO should exclude child_field and map common_field, and inherit base_field (which was excluded in BaseMappedDTO)
+    # Note: The base_field will still be present in ChildMappedDTO if it's not explicitly excluded in ChildMappedDTO
+    # and if it's part of the ChildMappedModel's columns. This tests the behavior.
+    child_fields = ChildMappedDTO.model_fields
+    assert "child_field" not in child_fields
+    assert child_fields["common_field"].annotation is str
+    assert "id" in child_fields
+    # base_field should be present in ChildMappedDTO as it's part of ChildMappedModel's columns
+    # and not explicitly excluded in ChildMappedDTO
+    assert "base_field" in child_fields
+
+
+def test_concrete_table_inheritance_dtos():
+    """Test DTO creation from models with concrete table inheritance."""
+
+    class ConcreteTableBaseDTO(DTO[ConcreteTableBase]):
+        pass
+
+    class ConcreteTableChildDTO(DTO[ConcreteTableChild]):
+        pass
+
+    # Base DTO should only have its own fields
+    base_fields = ConcreteTableBaseDTO.model_fields
+    assert list(base_fields.keys()) == ["id", "base_data"]
+
+    # Child DTO should have its own fields (including inherited ones if they are part of its table)
+    # In concrete table inheritance, child tables have all columns, including those from the base.
+    child_fields = ConcreteTableChildDTO.model_fields
+    assert list(child_fields.keys()) == ["id", "base_data", "child_data"]

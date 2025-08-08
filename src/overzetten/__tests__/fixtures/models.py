@@ -12,11 +12,12 @@ from sqlalchemy import (
     Text,
     ForeignKey,
     case,
+    Sequence,
 )
 from sqlalchemy.dialects import postgresql, mysql
 import enum
 import uuid
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, MappedAsDataclass
 from sqlalchemy import TypeDecorator
 from typing import Optional, List, Dict, Any
 import datetime
@@ -233,6 +234,7 @@ class Engineer(Employee):
     engineer_info: Mapped[str]
 
 
+# Custom Types (moved to appear before AdvancedDefaultTestModel)
 class CustomInt(TypeDecorator):
     impl = Integer
     cache_ok = True
@@ -268,6 +270,20 @@ class NoPythonTypeModel(Base):
     __tablename__ = "no_python_type_test"
     id: Mapped[int] = mapped_column(primary_key=True)
     no_python_field: Mapped[Any] = mapped_column(NoPythonType)
+
+
+# AdvancedDefaultTestModel (now after CustomInt and CustomTypeModel)
+class AdvancedDefaultTestModel(MappedAsDataclass, Base):
+    __tablename__ = "advanced_default_test"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    # Field with init=False, should not appear in DTO constructor
+    computed_value: Mapped[int] = mapped_column(Integer, init=False, default=100)
+    # Field with insert_default
+    insert_only_value: Mapped[str] = mapped_column(String, insert_default="insert_default_val")
+    # Field with a sequence (for non-PK, though less common)
+    sequence_value: Mapped[int] = mapped_column(Integer, default=Sequence('my_seq'))
+    # Field with a custom type and default
+    custom_type_default: Mapped[int] = mapped_column(CustomInt, default=5)
 
 
 class MappedAnnotationTestModel(Base):
@@ -328,3 +344,15 @@ class MySQLSpecificTypesModel(MySQLBase):
     year_field: Mapped[int] = mapped_column(mysql.YEAR)
     set_field: Mapped[str] = mapped_column(mysql.SET("val1", "val2"))
     enum_field: Mapped[MySQLEnum] = mapped_column(mysql.ENUM(MySQLEnum))
+
+
+class ConcreteTableBase(Base):
+    __tablename__ = "concrete_table_base"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    base_data: Mapped[str]
+
+
+class ConcreteTableChild(ConcreteTableBase):
+    __tablename__ = "concrete_table_child"
+    id: Mapped[int] = mapped_column(ForeignKey("concrete_table_base.id"), primary_key=True)
+    child_data: Mapped[str]

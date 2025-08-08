@@ -13,7 +13,7 @@ from typing import (
 )
 from sqlalchemy.orm import MappedAsDataclass, Mapped
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from sqlalchemy import inspect
+from sqlalchemy import inspect, Sequence
 from pydantic import BaseModel, ConfigDict, create_model, Field
 from pydantic.fields import FieldInfo
 from dataclasses import dataclass, field
@@ -156,6 +156,12 @@ class DTOMeta(type):
         # Process each column
         for column_name, column in inspector.columns.items():
             attr = getattr(sqlalchemy_model, column_name)
+            # Exclude fields with init=False (dataclass-specific)
+            # Check __dataclass_fields__ for the init parameter
+            if hasattr(sqlalchemy_model, '__dataclass_fields__') and \
+               column_name in sqlalchemy_model.__dataclass_fields__ and \
+               sqlalchemy_model.__dataclass_fields__[column_name].init is False:
+                continue
 
             # Apply include/exclude logic
             if not DTOMeta._should_include_field(attr, config):
@@ -220,76 +226,7 @@ class DTOMeta(type):
 
         return True
 
-    def _extract_fields(
-        sqlalchemy_model: Type[MappedAsDataclass], config: DTOConfig
-    ) -> Dict[str, Any]:
-        """Extract fields from SQLAlchemy model and convert to Pydantic format."""
-        fields = {}
-
-        # Get SQLAlchemy inspector
-        if not hasattr(sqlalchemy_model, "__table__"):
-            raise TypeError(
-                f"Cannot create DTO from abstract or unmapped SQLAlchemy model '{sqlalchemy_model.__name__}'."
-            )
-        inspector = inspect(sqlalchemy_model)
-
-        # Process each column
-        for column_name, column in inspector.columns.items():
-            attr = getattr(sqlalchemy_model, column_name)
-
-            # Apply include/exclude logic
-            if not DTOMeta._should_include_field(attr, config):
-                continue
-
-            # Get field type
-            field_type = DTOMeta._get_field_type(sqlalchemy_model, attr, column, config)
-
-            # Get default value
-            default_value = DTOMeta._get_field_default(attr, column, config)
-
-            fields[column_name] = (field_type, default_value)
-
-        # Validate mapped fields that are not columns
-        for mapped_attr, _ in config.mapped.items():
-            if isinstance(mapped_attr, InstrumentedAttribute) and not hasattr(
-                sqlalchemy_model, mapped_attr.key
-            ):
-                raise ValueError(
-                    f"Mapped attribute '{mapped_attr.key}' does not exist on SQLAlchemy model "
-                    f"'{sqlalchemy_model.__name__}'."
-                )
-
-        # Process relationships if enabled
-        if config.include_relationships:
-            for rel_name, relationship in inspector.relationships.items():
-                attr = getattr(sqlalchemy_model, rel_name)
-
-                if not DTOMeta._should_include_field(attr, config):
-                    continue
-
-                # Check if relationship has custom mapping
-                if attr in config.mapped:
-                    field_type = DTOMeta._get_field_type(
-                        sqlalchemy_model, attr, None, config
-                    )  # Pass None for column as it's a relationship
-                else:
-                    # Default to Any for relationships without explicit mapping
-                    field_type = Any
-
-                # Get default value
-                default_value = DTOMeta._get_field_default(
-                    attr, None, config
-                )  # Pass None for column as it's a relationship
-
-                # Handle collection vs. scalar relationships
-                if relationship.uselist:
-                    # For lists (one-to-many, many-to-many), the type is the list itself
-                    fields[rel_name] = (field_type, default_value or [])
-                else:
-                    # For scalar (many-to-one, one-to-one), it can be optional
-                    fields[rel_name] = (Optional[field_type], default_value)
-
-        return fields
+    
 
     @staticmethod
     def _get_field_type(
@@ -360,16 +297,30 @@ class DTOMeta(type):
 
         # Check custom defaults
         if attr in config.field_defaults:
-            return config.field_defaults[attr]
+            custom_default = config.field_defaults[attr]
+            if isinstance(custom_default, collections.abc.Callable):
+                return Field(default_factory=custom_default)
+            return custom_default
 
         # Use SQLAlchemy column default or server_default
-        if column is not None:  # Add this check
+        if column is not None:
+            # Primary keys that are autoincrementing should not be required in Pydantic
+            if column.primary_key and column.autoincrement:
+                return None # Pydantic default is None for autoincrementing PKs
+
             if column.default is not None:
-                if isinstance(column.default.arg, collections.abc.Callable):
-                    # For callable defaults, Pydantic needs a Field with a default_factory
+                # Handle Sequence objects directly
+                if isinstance(column.default, Sequence):
+                    return None # Sequences are handled by DB, not Pydantic default
+                # Handle callable defaults from SQLAlchemy
+                elif hasattr(column.default, 'arg') and isinstance(column.default.arg, collections.abc.Callable):
                     return Field(default_factory=column.default.arg)
-                else:
+                # Handle scalar defaults from SQLAlchemy
+                elif hasattr(column.default, 'arg'):
                     return column.default.arg
+                # Fallback for other types of column.default (e.g., literal values directly)
+                else:
+                    return column.default
             elif column.server_default is not None:
                 # Fields with server_default are not required in Pydantic
                 return None
@@ -377,7 +328,8 @@ class DTOMeta(type):
                 return None
             else:
                 return ...  # Required field
-        else:  # If column is None, it's likely a relationship or a mapped field without a direct column
+        else:
+            # If column is None, it's likely a relationship or a mapped field without a direct column
             # For relationships, they are typically optional unless explicitly set otherwise
             # For mapped fields, their default should come from config.mapped or config.field_defaults
             # If not found, and it's a relationship, it might be None or an empty list/dict
