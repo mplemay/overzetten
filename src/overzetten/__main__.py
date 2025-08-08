@@ -263,13 +263,16 @@ class DTOMeta(type):
         if attr in config.field_defaults:
             return config.field_defaults[attr]
 
-        # Use SQLAlchemy column default
+        # Use SQLAlchemy column default or server_default
         if column.default is not None:
             if isinstance(column.default.arg, collections.abc.Callable):
                 # For callable defaults, Pydantic needs a Field with a default_factory
                 return Field(default_factory=column.default.arg)
             else:
                 return column.default.arg
+        elif column.server_default is not None:
+            # Fields with server_default are not required in Pydantic
+            return None
         elif column.nullable:
             return None
         else:
