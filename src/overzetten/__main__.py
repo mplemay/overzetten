@@ -9,6 +9,7 @@ from typing import (
     Union,
     TypeVar,
     Generic,
+    Annotated,
 )
 from sqlalchemy.orm import MappedAsDataclass, Mapped
 from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -306,6 +307,8 @@ class DTOMeta(type):
             # is handled as a default value.
             if isinstance(mapped_value, FieldInfo):
                 field_type = column.type.python_type
+            elif get_origin(mapped_value) is Annotated:
+                field_type = mapped_value  # Keep the Annotated type as is
             else:
                 field_type = mapped_value
         else:
@@ -348,25 +351,38 @@ class DTOMeta(type):
             mapped_value = config.mapped[attr]
             if isinstance(mapped_value, FieldInfo):
                 return mapped_value
+            elif get_origin(mapped_value) is Annotated:  # Add this block
+                for arg in get_args(mapped_value)[
+                    1:
+                ]:  # Iterate through metadata arguments
+                    if isinstance(arg, FieldInfo):
+                        return arg  # Return the FieldInfo object
 
         # Check custom defaults
         if attr in config.field_defaults:
             return config.field_defaults[attr]
 
         # Use SQLAlchemy column default or server_default
-        if column.default is not None:
-            if isinstance(column.default.arg, collections.abc.Callable):
-                # For callable defaults, Pydantic needs a Field with a default_factory
-                return Field(default_factory=column.default.arg)
+        if column is not None:  # Add this check
+            if column.default is not None:
+                if isinstance(column.default.arg, collections.abc.Callable):
+                    # For callable defaults, Pydantic needs a Field with a default_factory
+                    return Field(default_factory=column.default.arg)
+                else:
+                    return column.default.arg
+            elif column.server_default is not None:
+                # Fields with server_default are not required in Pydantic
+                return None
+            elif column.nullable:
+                return None
             else:
-                return column.default.arg
-        elif column.server_default is not None:
-            # Fields with server_default are not required in Pydantic
+                return ...  # Required field
+        else:  # If column is None, it's likely a relationship or a mapped field without a direct column
+            # For relationships, they are typically optional unless explicitly set otherwise
+            # For mapped fields, their default should come from config.mapped or config.field_defaults
+            # If not found, and it's a relationship, it might be None or an empty list/dict
+            # For now, return None for relationships if no explicit default is provided
             return None
-        elif column.nullable:
-            return None
-        else:
-            return ...  # Required field
 
     @staticmethod
     def _is_optional_type(field_type) -> bool:

@@ -1,8 +1,6 @@
 import pytest
 from pydantic import EmailStr, HttpUrl, UUID4, Json, SecretStr, Field, BaseModel
-from pydantic.fields import FieldInfo
 from typing import List, Dict, Union, Literal, Optional, Annotated
-import uuid
 
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import User, UnionLiteralTestModel
@@ -71,7 +69,7 @@ def test_field_mapping_to_specific_pydantic_types():
         )
 
     fields = UserSpecificMappedDTO.model_fields
-    assert fields["uuid_field"].annotation is Optional[uuid.UUID]
+    assert fields["uuid_field"].annotation == Optional[UUID4]
     assert fields["secret_field"].annotation is Optional[SecretStr]
     assert fields["json_field"].annotation is Optional[Json]
 
@@ -145,10 +143,8 @@ def test_annotated_types_with_metadata():
     fields = UserAnnotatedDTO.model_fields
     assert fields["name"].annotation is str
     assert any(
-        isinstance(m, FieldInfo) and getattr(m, "min_length", None) == 5
-        for m in fields["name"].metadata
+        hasattr(m, "min_length") and m.min_length == 5 for m in fields["name"].metadata
     )
     assert any(
-        isinstance(m, FieldInfo) and getattr(m, "max_length", None) == 10
-        for m in fields["name"].metadata
+        hasattr(m, "max_length") and m.max_length == 10 for m in fields["name"].metadata
     )
