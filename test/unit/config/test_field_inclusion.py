@@ -1,9 +1,7 @@
-
-import pytest
 from pydantic import EmailStr
 
 from overzetten import DTO, DTOConfig
-from test.fixtures.sqlalchemy_models import User
+from fixtures.sqlalchemy_models import User
 
 
 def test_field_inclusion(db_engine):

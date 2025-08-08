@@ -1,11 +1,10 @@
-import pytest
 from pydantic import BaseModel
 from typing import Optional
 import datetime
 from decimal import Decimal
 
 from overzetten import DTO, DTOConfig
-from test.fixtures.sqlalchemy_models import User
+from fixtures.sqlalchemy_models import User
 
 
 def test_basic_dto_creation(db_engine):

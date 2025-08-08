@@ -5,7 +5,7 @@ from typing import List, Dict, Union, Literal, Optional, Annotated
 import uuid
 
 from overzetten import DTO, DTOConfig
-from test.fixtures.sqlalchemy_models import User, UnionLiteralTestModel
+from fixtures.sqlalchemy_models import User, UnionLiteralTestModel
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 
@@ -38,8 +38,8 @@ def test_field_mapping_with_field_constraints(db_engine):
     fields = UserConstrainedDTO.model_fields
     # Check that the metadata contains the constraints from the Field object.
     # We iterate through the metadata to find the respective constraint objects.
-    assert any(getattr(m, 'min_length', None) == 3 for m in fields["name"].metadata)
-    assert any(getattr(m, 'max_length', None) == 50 for m in fields["name"].metadata)
+    assert any(getattr(m, "min_length", None) == 3 for m in fields["name"].metadata)
+    assert any(getattr(m, "max_length", None) == 50 for m in fields["name"].metadata)
 
 
 def test_field_mapping_to_complex_types(db_engine):
@@ -85,7 +85,9 @@ def test_field_mapping_to_union_literal_and_custom_pydantic_models(db_engine):
     class UnionLiteralMappedDTO(DTO[UnionLiteralTestModel]):
         config = DTOConfig(
             mapped={
-                UnionLiteralTestModel.status: Union[Literal["active"], Literal["inactive"]],
+                UnionLiteralTestModel.status: Union[
+                    Literal["active"], Literal["inactive"]
+                ],
                 UnionLiteralTestModel.value: CustomPydanticModel,
             }
         )
@@ -99,14 +101,10 @@ def test_mapping_same_field_to_different_types(db_engine):
     """Test mapping the same SQLAlchemy field to different Pydantic types in different DTOs."""
 
     class UserDTOMappedNameStr(DTO[User]):
-        config = DTOConfig(
-            mapped={User.name: str}
-        )
+        config = DTOConfig(mapped={User.name: str})
 
     class UserDTOMappedNameEmail(DTO[User]):
-        config = DTOConfig(
-            mapped={User.name: EmailStr}
-        )
+        config = DTOConfig(mapped={User.name: EmailStr})
 
     # Verify the name field in the first DTO
     assert UserDTOMappedNameStr.model_fields["name"].annotation == str
@@ -117,6 +115,7 @@ def test_mapping_same_field_to_different_types(db_engine):
 
 def test_mapping_non_existent_field_errors(db_engine):
     """Test that mapping a non-existent SQLAlchemy field raises an error."""
+
     # Create a dummy InstrumentedAttribute that doesn't exist on the User model
     class NonExistentAttr(InstrumentedAttribute):
         def __init__(self, key):
@@ -125,11 +124,14 @@ def test_mapping_non_existent_field_errors(db_engine):
     non_existent_field = NonExistentAttr("non_existent_field")
 
     with pytest.raises(ValueError) as excinfo:
+
         class UserDTOWithNonExistentMapping(DTO[User]):
-            config = DTOConfig(
-                mapped={non_existent_field: str}
-            )
-    assert "Mapped attribute 'non_existent_field' does not exist on SQLAlchemy model 'User'." in str(excinfo.value)
+            config = DTOConfig(mapped={non_existent_field: str})
+
+    assert (
+        "Mapped attribute 'non_existent_field' does not exist on SQLAlchemy model 'User'."
+        in str(excinfo.value)
+    )
 
 
 def test_annotated_types_with_metadata(db_engine):
@@ -142,5 +144,11 @@ def test_annotated_types_with_metadata(db_engine):
 
     fields = UserAnnotatedDTO.model_fields
     assert fields["name"].annotation == str
-    assert any(isinstance(m, FieldInfo) and getattr(m, 'min_length', None) == 5 for m in fields["name"].metadata)
-    assert any(isinstance(m, FieldInfo) and getattr(m, 'max_length', None) == 10 for m in fields["name"].metadata)
+    assert any(
+        isinstance(m, FieldInfo) and getattr(m, "min_length", None) == 5
+        for m in fields["name"].metadata
+    )
+    assert any(
+        isinstance(m, FieldInfo) and getattr(m, "max_length", None) == 10
+        for m in fields["name"].metadata
+    )

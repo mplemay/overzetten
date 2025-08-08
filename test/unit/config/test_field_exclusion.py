@@ -1,7 +1,5 @@
-import pytest
-
 from overzetten import DTO, DTOConfig
-from test.fixtures.sqlalchemy_models import User, BaseMappedModel, ChildMappedModel, Address
+from fixtures.sqlalchemy_models import User, ChildMappedModel, Address
 
 
 def test_field_exclusion(db_engine):
@@ -53,7 +51,7 @@ def test_exclude_overrides_mapped(db_engine):
     class ExcludeMappedDTO(DTO[User]):
         config = DTOConfig(
             exclude={User.name},
-            mapped={User.name: str}  # This should be ignored
+            mapped={User.name: str},  # This should be ignored
         )
 
     fields = ExcludeMappedDTO.model_fields

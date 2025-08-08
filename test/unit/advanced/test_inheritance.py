@@ -2,7 +2,16 @@ import pytest
 import datetime
 
 from overzetten import DTO
-from test.fixtures.sqlalchemy_models import Employee, Manager, Engineer, BaseMappedModel, ChildMappedModel, Product, AbstractBaseModel, ConcreteModel
+from fixtures.sqlalchemy_models import (
+    Employee,
+    Manager,
+    Engineer,
+    BaseMappedModel,
+    ChildMappedModel,
+    Product,
+    AbstractBaseModel,
+    ConcreteModel,
+)
 
 
 def test_single_table_inheritance(db_engine):
@@ -69,7 +78,10 @@ def test_mixin_inheritance(db_engine):
 
 def test_abstract_base_model_dto_creation(db_engine):
     """Test that DTOs cannot be created directly from abstract SQLAlchemy models."""
-    with pytest.raises(TypeError, match="Cannot create DTO from abstract or unmapped SQLAlchemy model"): # Adjust match string if needed
+    with pytest.raises(
+        TypeError, match="Cannot create DTO from abstract or unmapped SQLAlchemy model"
+    ):  # Adjust match string if needed
+
         class AbstractDTO(DTO[AbstractBaseModel]):
             pass
 

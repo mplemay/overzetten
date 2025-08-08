@@ -1,8 +1,5 @@
-
-import pytest
-
 from overzetten import DTO, DTOConfig
-from test.fixtures.sqlalchemy_models import User
+from fixtures.sqlalchemy_models import User
 
 
 def test_model_name_override(db_engine):
@@ -48,6 +45,17 @@ def test_naming_does_not_affect_functionality(db_engine):
     assert fields["id"].annotation == int
 
     # Check instantiation
-    instance = MyDTO(id=1, name="test", age=30, is_active=True, created_at="2023-01-01T12:00:00", registered_on="2023-01-01", last_login="12:00:00", balance=100.0, rating=4.5, data=None)
+    instance = MyDTO(
+        id=1,
+        name="test",
+        age=30,
+        is_active=True,
+        created_at="2023-01-01T12:00:00",
+        registered_on="2023-01-01",
+        last_login="12:00:00",
+        balance=100.0,
+        rating=4.5,
+        data=None,
+    )
     assert instance.id == 1
     assert instance.name == "test"

@@ -1,6 +1,6 @@
 from pydantic import Field
 from typing import Optional
-from test.fixtures.sqlalchemy_models import RequiredFieldTestModel
+from fixtures.sqlalchemy_models import RequiredFieldTestModel
 from overzetten import DTO, DTOConfig
 
 

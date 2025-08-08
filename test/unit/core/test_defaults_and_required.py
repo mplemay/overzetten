@@ -1,9 +1,5 @@
-
-import pytest
-import datetime
-
 from overzetten import DTO, DTOConfig
-from test.fixtures.sqlalchemy_models import DefaultValueTestModel, User
+from fixtures.sqlalchemy_models import DefaultValueTestModel, User
 
 
 def test_default_values_and_required_fields(db_engine):
@@ -63,8 +59,7 @@ def test_defaults_for_excluded_fields_ignored(db_engine):
 
     class UserExcludedWithDefaultDTO(DTO[User]):
         config = DTOConfig(
-            exclude={User.name},
-            field_defaults={User.name: "should_be_ignored"}
+            exclude={User.name}, field_defaults={User.name: "should_be_ignored"}
         )
 
     fields = UserExcludedWithDefaultDTO.model_fields

@@ -1,9 +1,7 @@
-
-import pytest
-from typing import List, Optional
+from typing import List
 
 from overzetten import DTO, DTOConfig
-from test.fixtures.sqlalchemy_models import User, Address
+from fixtures.sqlalchemy_models import User, Address
 
 
 def test_one_to_many_relationship(db_engine):

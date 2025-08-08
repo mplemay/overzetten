@@ -1,16 +1,12 @@
-import sys
-import os
 import pytest
 from sqlalchemy import create_engine
-from test.fixtures.sqlalchemy_models import (
+from fixtures.sqlalchemy_models import (
     Base,
     PostgresBase,
     MySQLBase,
     User,
     Address,
 )
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 @pytest.fixture(scope="function")
@@ -23,10 +19,13 @@ def db_engine():
     MySQLBase.metadata.drop_all(engine)
 
     # Create tables only for SQLite-compatible models
-    Base.metadata.create_all(engine, tables=[
-        User.__table__,
-        Address.__table__,
-    ])
+    Base.metadata.create_all(
+        engine,
+        tables=[
+            User.__table__,
+            Address.__table__,
+        ],
+    )
     yield engine
 
     # Drop all tables from both metadata objects after tests

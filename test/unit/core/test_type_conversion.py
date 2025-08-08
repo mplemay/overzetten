@@ -1,11 +1,19 @@
-import pytest
-from pydantic import BaseModel
 from typing import Optional, List, Dict
 import datetime
 from decimal import Decimal
 
 from overzetten import DTO
-from test.fixtures.sqlalchemy_models import TypeConversionTestModel, CustomTypeModel, MappedAnnotationTestModel, GenericMappedTestModel, PostgresSpecificTypesModel, MyEnum, MySQLSpecificTypesModel, MySQLEnum, SQLiteSpecificTypesModel
+from fixtures.sqlalchemy_models import (
+    TypeConversionTestModel,
+    CustomTypeModel,
+    MappedAnnotationTestModel,
+    GenericMappedTestModel,
+    PostgresSpecificTypesModel,
+    MyEnum,
+    MySQLSpecificTypesModel,
+    MySQLEnum,
+    SQLiteSpecificTypesModel,
+)
 import uuid
 
 
