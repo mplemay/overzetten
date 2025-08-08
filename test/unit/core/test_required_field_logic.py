@@ -83,16 +83,17 @@ def test_boolean_with_default(db_engine):
 def test_interaction_with_custom_field_defaults(db_engine):
     """Test interaction with custom field_defaults in DTOConfig."""
 
-    class CustomDefaultsDTO(
-        DTO[RequiredFieldTestModel],
-        config=DTOConfig(
+    class CustomDefaultsDTO(DTO[RequiredFieldTestModel]):
+        config = DTOConfig(
             field_defaults={
-                "required_no_default": Field("custom_default_for_required"),
-                "nullable_no_default": Field("custom_default_for_nullable"),
+                RequiredFieldTestModel.required_no_default: Field(
+                    default="custom_default_for_required"
+                ),
+                RequiredFieldTestModel.nullable_no_default: Field(
+                    "custom_default_for_nullable"
+                ),
             }
-        ),
-    ):
-        pass
+        )
 
     fields = CustomDefaultsDTO.model_fields
     assert not fields["required_no_default"].is_required()
