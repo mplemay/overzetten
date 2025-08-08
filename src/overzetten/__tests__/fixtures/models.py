@@ -1,36 +1,37 @@
+import datetime
+import enum
+import uuid
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy import (
-    String,
-    Integer,
-    Boolean,
-    DateTime,
-    Date,
-    Time,
-    Float,
-    Numeric,
-    LargeBinary,
     JSON,
-    Text,
-    ForeignKey,
-    case,
-    Sequence,
-    Table,
+    Boolean,
     Column,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    LargeBinary,
+    Numeric,
+    Sequence,
+    String,
+    Table,
+    Text,
+    Time,
+    TypeDecorator,
+    case,
 )
+from sqlalchemy.dialects import mysql, postgresql
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
+    MappedAsDataclass,
     mapped_column,
     relationship,
-    MappedAsDataclass,
 )
-from sqlalchemy import TypeDecorator
-from typing import Optional, List, Dict, Any
-import datetime
-from decimal import Decimal
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.dialects import postgresql, mysql
-import enum
-import uuid
 
 
 class Base(DeclarativeBase):
@@ -74,9 +75,7 @@ class User(Base):
 
     @full_name.expression
     def full_name(cls):
-        return case(
-            (cls.fullname is not None, cls.name + " " + cls.fullname), else_=cls.name
-        )
+        return case((cls.fullname is not None, cls.name + " " + cls.fullname), else_=cls.name)
 
 
 class Address(Base):
@@ -122,23 +121,17 @@ class ServerNullableTestModel(Base):
         String, nullable=True, server_default="server_default_value"
     )
     # Not nullable with a server default
-    server_not_nullable_field: Mapped[str] = mapped_column(
-        String, server_default="another_server_default"
-    )
+    server_not_nullable_field: Mapped[str] = mapped_column(String, server_default="another_server_default")
 
 
 class DefaultValueTestModel(Base):
     __tablename__ = "default_value_test"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    scalar_default: Mapped[str] = mapped_column(default="default_value")
-    callable_default: Mapped[datetime.datetime] = mapped_column(
-        default=datetime.datetime.now
-    )
     required_field: Mapped[str]
-    server_default_field: Mapped[str] = mapped_column(
-        server_default="server_default_value"
-    )
+    server_default_field: Mapped[str] = mapped_column(server_default="server_default_value")
+    scalar_default: Mapped[str] = mapped_column(default="default_value")
+    callable_default: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now)
 
 
 class RequiredFieldTestModel(Base):
@@ -151,13 +144,9 @@ class RequiredFieldTestModel(Base):
     # Not nullable, has default = T with default
     required_with_default: Mapped[str] = mapped_column(String, default="default_value")
     # Nullable, has default = Optional[T] with default
-    nullable_with_default: Mapped[Optional[str]] = mapped_column(
-        String, nullable=True, default="nullable_default"
-    )
+    nullable_with_default: Mapped[Optional[str]] = mapped_column(String, nullable=True, default="nullable_default")
     # Not nullable, has server_default = T with default
-    required_with_server_default: Mapped[str] = mapped_column(
-        String, server_default="server_default_value"
-    )
+    required_with_server_default: Mapped[str] = mapped_column(String, server_default="server_default_value")
     # Boolean field with default
     boolean_with_default: Mapped[bool] = mapped_column(Boolean, default=False)
     # Nullable, has server_default = Optional[T] with None default (from Pydantic perspective)
@@ -172,9 +161,7 @@ class Node(Base):
     name: Mapped[str]
     # Self-referential relationship
     parent_node_id: Mapped[Optional[int]] = mapped_column(ForeignKey("nodes.id"))
-    parent_node: Mapped[Optional["Node"]] = relationship(
-        back_populates="child_nodes", remote_side=[id]
-    )
+    parent_node: Mapped[Optional["Node"]] = relationship(back_populates="child_nodes", remote_side=[id])
     child_nodes: Mapped[List["Node"]] = relationship(back_populates="parent_node")
 
 
@@ -187,18 +174,14 @@ class BaseMappedModel(Base):
 
 class ChildMappedModel(BaseMappedModel):
     __tablename__ = "child_mapped_model"
-    id: Mapped[int] = mapped_column(
-        ForeignKey("base_mapped_model.id"), primary_key=True
-    )
+    id: Mapped[int] = mapped_column(ForeignKey("base_mapped_model.id"), primary_key=True)
     child_field: Mapped[str]
     common_field: Mapped[str]
 
 
 class TimestampMixin:
     created_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now)
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        default=datetime.datetime.now, onupdate=datetime.datetime.now
-    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
 
 class Product(TimestampMixin, Base):
@@ -292,9 +275,7 @@ class AdvancedDefaultTestModel(MappedAsDataclass, Base):
     # Field with init=False, should not appear in DTO constructor
     computed_value: Mapped[int] = mapped_column(Integer, init=False, default=100)
     # Field with insert_default
-    insert_only_value: Mapped[str] = mapped_column(
-        String, insert_default="insert_default_val"
-    )
+    insert_only_value: Mapped[str] = mapped_column(String, insert_default="insert_default_val")
     # Field with a sequence (for non-PK, though less common)
     sequence_value: Mapped[int] = mapped_column(Integer, default=Sequence("my_seq"))
     # Field with a custom type and default
@@ -369,9 +350,7 @@ class ConcreteTableBase(Base):
 
 class ConcreteTableChild(ConcreteTableBase):
     __tablename__ = "concrete_table_child"
-    id: Mapped[int] = mapped_column(
-        ForeignKey("concrete_table_base.id"), primary_key=True
-    )
+    id: Mapped[int] = mapped_column(ForeignKey("concrete_table_base.id"), primary_key=True)
     child_data: Mapped[str]
 
 
@@ -388,18 +367,14 @@ class Left(Base):
     __tablename__ = "left_table"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    rights: Mapped[List["Right"]] = relationship(
-        secondary=association_table, back_populates="lefts"
-    )
+    rights: Mapped[List["Right"]] = relationship(secondary=association_table, back_populates="lefts")
 
 
 class Right(Base):
     __tablename__ = "right_table"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    lefts: Mapped[List["Left"]] = relationship(
-        secondary=association_table, back_populates="rights"
-    )
+    lefts: Mapped[List["Left"]] = relationship(secondary=association_table, back_populates="rights")
 
 
 # Many-to-Many Relationship (Association Object / Through Model)

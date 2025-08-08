@@ -10,6 +10,8 @@ from overzetten.__tests__.fixtures.models import (
     RightThrough,
     ThroughModel,
 )
+import pytest
+from pydantic import ValidationError, EmailStr
 
 
 def test_one_to_many_relationship():
@@ -128,3 +130,87 @@ def test_many_to_many_through_model_handling():
     fields = ThroughModelDTO.model_fields
     assert "left" not in fields
     assert "right" not in fields
+
+
+def test_back_populates_and_backref_handling():
+    """Test that DTOs are correctly generated for models with back_populates/backref relationships."""
+
+    class AddressDTO(DTO[Address]):
+        config = DTOConfig(exclude={Address.user}) # Exclude to prevent recursion
+
+    class UserDTO(DTO[User]):
+        config = DTOConfig(
+            include_relationships=True,
+            mapped={User.addresses: List[AddressDTO]}
+        )
+
+    # This test primarily ensures that the DTOs can be created without errors
+    # when back_populates/backref are defined in the SQLAlchemy models.
+    # The actual structure is tested by one_to_many_relationship test.
+    user_dto = UserDTO(id=1, name="Test User", age=30, is_active=True, created_at="2023-01-01T10:00:00", registered_on="2023-01-01", last_login="10:00:00", balance=100.0, rating=4.5, addresses=[])
+    assert user_dto.id == 1
+
+
+def test_relationship_validation():
+    """Test that Pydantic validates relationships based on the mapped DTO types."""
+
+    class AddressDTO(DTO[Address]):
+        config = DTOConfig(exclude={Address.user}, mapped={Address.email_address: EmailStr}) # Add EmailStr mapping
+
+    class UserWithAddressesDTO(DTO[User]):
+        config = DTOConfig(
+            include_relationships=True,
+            mapped={User.addresses: List[AddressDTO]}
+        )
+
+    # Valid data
+    valid_user_data = {
+        "id": 1,
+        "name": "Test User",
+        "age": 30,
+        "is_active": True,
+        "created_at": "2023-01-01T10:00:00",
+        "registered_on": "2023-01-01",
+        "last_login": "10:00:00",
+        "balance": 100.0,
+        "rating": 4.5,
+        "addresses": [
+            {"id": 1, "email_address": "test@example.com", "user_id": 1}
+        ]
+    }
+    user_dto = UserWithAddressesDTO(**valid_user_data)
+    assert user_dto.addresses[0].email_address == "test@example.com"
+
+    # Invalid data (addresses is not a list of AddressDTO)
+    invalid_user_data = {
+        "id": 1,
+        "name": "Test User",
+        "age": 30,
+        "is_active": True,
+        "created_at": "2023-01-01T10:00:00",
+        "registered_on": "2023-01-01",
+        "last_login": "10:00:00",
+        "balance": 100.0,
+        "rating": 4.5,
+        "addresses": "not a list"
+    }
+    with pytest.raises(ValidationError):
+        UserWithAddressesDTO(**invalid_user_data)
+
+    # Invalid data (addresses contains an invalid item)
+    invalid_user_data_item = {
+        "id": 1,
+        "name": "Test User",
+        "age": 30,
+        "is_active": True,
+        "created_at": "2023-01-01T10:00:00",
+        "registered_on": "2023-01-01",
+        "last_login": "10:00:00",
+        "balance": 100.0,
+        "rating": 4.5,
+        "addresses": [
+            {"id": 1, "email_address": "invalid-email", "user_id": 1}
+        ]
+    }
+    with pytest.raises(ValidationError):
+        UserWithAddressesDTO(**invalid_user_data_item)

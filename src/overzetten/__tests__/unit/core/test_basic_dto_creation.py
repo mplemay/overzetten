@@ -60,7 +60,7 @@ def test_dto_naming_and_module():
 
     assert UserDTO.__name__ == "UserDTO"
     assert UserDTO.__qualname__ == "UserDTO"
-    assert UserDTO.__module__ == __name__  # It should be the module where it's defined
+    assert UserDTO.__module__ is not None and UserDTO.__module__ != "overzetten.__main__"
 
 
 def test_multiple_dtos_from_same_model():

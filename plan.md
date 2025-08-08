@@ -57,7 +57,7 @@ This document outlines a comprehensive testing plan for the `overzetten` library
     - ~`List[CustomType]`, `Dict[str, CustomType]`~
     - ~`Union` types, `Literal` types~
     - ~Custom Pydantic models as field types~
-- Test mapping relationships to other DTO types.
+- - ~Test mapping relationships to other DTO types.~
 - Test circular mapping references.
 - ~**New:** Test mapping same field to different types in different DTOs.~
 - ~**New:** Test mapping fields that don't exist in SQLAlchemy model (should error).~
@@ -151,37 +151,37 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 - ~Self-Referential:~
     - ~Test tree structures, hierarchical data.~
 - Advanced Relationship Options:
-    - `back_populates`, `backref` handling.
-    - `cascade` option preservation.
-    - `secondary` table relationships.
-    - `secondary` table relationships.
+    - - ~`back_populates`, `backref` handling.~
+    - - ~`cascade` option preservation.~
+    - - ~`secondary` table relationships.~
+    - - ~`secondary` table relationships.~
 - Relationship Mapping:
-    - ~Test mapping relationships to other DTO types.~
-    - ~Test circular DTO references.~
-    - Test relationship validation.
+    - ~- ~Test mapping relationships to other DTO types.~~
+    - ~- ~Test circular DTO references.~~
+    - - ~Test relationship validation.~
 
 ## 5. Advanced Features (Enhanced)
 
 ### Caching (More Thorough)
 **Test Suite:** `test_caching.py`
-- Test cache key generation uniqueness.
-- Test that functionally identical configs share cache.
-- Test cache invalidation scenarios.
-- **New:** Test cache size limits and LRU behavior.
-- **New:** Test thread safety of cache.
-- **New:** Test cache memory leaks with many models.
-- **New:** Test cache behavior with dynamic imports.
+- ~- ~- ~Test cache key generation uniqueness.~~~
+- ~- ~- ~Test that functionally identical configs share cache.~~~
+- ~- ~- ~Test cache invalidation scenarios.~~~
+- ~- ~- ~**New:** Test cache size limits and LRU behavior.~~~
+- ~- ~- ~**New:** Test thread safety of cache.~~~
+- ~- ~- ~**New:** Test cache memory leaks with many models.~~~
+- ~- ~- ~**New:** Test cache behavior with dynamic imports.~~~
 
 ### Pydantic Configuration (Comprehensive)
 **Test Suite:** `test_pydantic_config.py`
-- Test all `ConfigDict` options:
-    - `validate_assignment`, `use_enum_values`, `populate_by_name`
-    - `str_strip_whitespace`, `json_schema_extra`
-    - `frozen`, `extra='forbid'/'allow'/'ignore'`
-- Test custom serialization (`model_serializer`).
-- Test custom validation (`field_validator`, `model_validator`).
-- **New:** Test JSON schema generation options.
-- **New:** Test performance settings (`validate_default`).
+- ~Test all `ConfigDict` options:~
+    - ~`validate_assignment`, `use_enum_values`, `populate_by_name`~
+    - ~`str_strip_whitespace`, `json_schema_extra`~
+    - ~`frozen`, `extra='forbid'/'allow'/'ignore'`~
+- ~Test custom serialization (`model_serializer`).~
+- ~Test custom validation (`field_validator`, `model_validator`).~
+- ~**New:** Test JSON schema generation options.~
+- ~**New:** Test performance settings (`validate_default`).~
 
 ## 6. Edge Cases and Error Handling (Major Enhancement)
 
