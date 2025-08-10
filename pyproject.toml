@@ -18,11 +18,14 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "fastapi>=0.116.1",
+    "httpx>=0.28.1",
     "pre-commit>=4.2.0",
     "pydantic[email]>=2.11.7",
     "pytest>=8.4.1",
     "ruff>=0.12.8",
     "ty>=0.0.1a17",
+    "uvicorn>=0.35.0",
 ]
 
 [tool.uv_build]
