@@ -1,8 +1,8 @@
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import (
+    AdvancedDefaultTestModel,
     DefaultValueTestModel,
     User,
-    AdvancedDefaultTestModel,
 )
 
 
@@ -32,7 +32,7 @@ def test_custom_defaults():
             field_defaults={
                 DefaultValueTestModel.scalar_default: "overridden",
                 DefaultValueTestModel.required_field: "custom_default",
-            }
+            },
         )
 
     fields = CustomDefaultDTO.model_fields
@@ -63,7 +63,8 @@ def test_defaults_for_excluded_fields_ignored():
 
     class UserExcludedWithDefaultDTO(DTO[User]):
         config = DTOConfig(
-            exclude={User.name}, field_defaults={User.name: "should_be_ignored"}
+            exclude={User.name},
+            field_defaults={User.name: "should_be_ignored"},
         )
 
     fields = UserExcludedWithDefaultDTO.model_fields
@@ -95,9 +96,7 @@ def test_advanced_sqlalchemy_defaults():
     # sequence_value should be present but not required (sequence)
     assert "sequence_value" in fields
     assert not fields["sequence_value"].is_required()
-    assert (
-        fields["sequence_value"].default is None
-    )  # Pydantic default is None for sequence
+    assert fields["sequence_value"].default is None  # Pydantic default is None for sequence
 
     # custom_type_default should have its default value
     assert fields["custom_type_default"].default == 5
@@ -114,7 +113,7 @@ def test_custom_defaults_callable_vs_static():
             field_defaults={
                 DefaultValueTestModel.scalar_default: callable_default_func,
                 DefaultValueTestModel.required_field: "static_custom_default",
-            }
+            },
         )
 
     fields = CustomDefaultsCallableStaticDTO.model_fields
@@ -133,7 +132,7 @@ def test_custom_defaults_type_validation():
         config = DTOConfig(
             field_defaults={
                 DefaultValueTestModel.scalar_default: 123,  # Should be str, but we provide int
-            }
+            },
         )
 
     # Pydantic will attempt to coerce the type, but if it fails, it will raise an error
@@ -151,6 +150,4 @@ def test_custom_defaults_type_validation():
         required_field="test",
         server_default_field="test",
     )
-    assert (
-        instance.scalar_default == 123
-    )  # Pydantic 2.x does not coerce int to str by default for Field(default=...)
+    assert instance.scalar_default == 123  # Pydantic 2.x does not coerce int to str by default for Field(default=...)

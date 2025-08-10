@@ -1,7 +1,9 @@
-from pydantic import Field
 from typing import Optional
-from overzetten.__tests__.fixtures.models import RequiredFieldTestModel
+
+from pydantic import Field
+
 from overzetten import DTO, DTOConfig
+from overzetten.__tests__.fixtures.models import RequiredFieldTestModel
 
 
 def test_required_no_default():
@@ -63,9 +65,7 @@ def test_required_with_server_default():
     # SQLAlchemy's server_default is not directly reflected in Pydantic's default
     # unless explicitly handled by overzetten. For now, we check it's not required.
     # Further tests might involve checking the actual default value if overzetten handles it.
-    assert (
-        fields["required_with_server_default"].default is None
-    )  # Pydantic default is None if not explicitly set
+    assert fields["required_with_server_default"].default is None  # Pydantic default is None if not explicitly set
 
 
 def test_nullable_with_server_default():
@@ -99,12 +99,12 @@ def test_interaction_with_custom_field_defaults():
         config = DTOConfig(
             field_defaults={
                 RequiredFieldTestModel.required_no_default: Field(
-                    default="custom_default_for_required"
+                    default="custom_default_for_required",
                 ),
                 RequiredFieldTestModel.nullable_no_default: Field(
-                    "custom_default_for_nullable"
+                    "custom_default_for_nullable",
                 ),
-            }
+            },
         )
 
     fields = CustomDefaultsDTO.model_fields

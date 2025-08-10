@@ -1,9 +1,10 @@
-import pytest
-from pydantic import BaseModel, ValidationError
-from pydantic.errors import PydanticUndefinedAnnotation
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String, Integer, Table, Column, MetaData
 from typing import Any, Union
+
+import pytest
+from pydantic import ValidationError
+from pydantic.errors import PydanticUndefinedAnnotation
+from sqlalchemy import Integer, String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import User
@@ -11,9 +12,6 @@ from overzetten.__tests__.fixtures.models import User
 
 class Base(DeclarativeBase):
     pass
-
-
-
 
 
 def test_abstract_model_error():
@@ -25,7 +23,8 @@ def test_abstract_model_error():
         name: Mapped[str] = mapped_column(String)
 
     with pytest.raises(
-        TypeError, match="Cannot create DTO from abstract or unmapped SQLAlchemy model"
+        TypeError,
+        match="Cannot create DTO from abstract or unmapped SQLAlchemy model",
     ):
 
         class InvalidDTO(DTO[AbstractModel]):
@@ -45,6 +44,7 @@ def test_excluding_and_including_same_field():
 
 def test_invalid_type_mapping_non_type_object():
     """Test that mapping to a non-type object raises an appropriate error."""
+
     class InvalidMappedDTO(DTO[User]):
         config = DTOConfig(mapped={User.name: "not_a_type"})
 
@@ -80,7 +80,7 @@ def test_generic_type_edge_cases():
         __tablename__ = "generic_edge_case_test"
         id: Mapped[int] = mapped_column(Integer, primary_key=True)
         any_field: Mapped[Any] = mapped_column(String)
-        union_field: Mapped[Union[str, int]] = mapped_column(String)
+        union_field: Mapped[str | int] = mapped_column(String)
 
     class GenericEdgeCaseDTO(DTO[GenericEdgeCaseModel]):
         pass

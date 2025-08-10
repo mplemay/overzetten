@@ -1,18 +1,19 @@
-import pytest
 import datetime
+
+import pytest
 
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import (
-    Employee,
-    Manager,
-    Engineer,
+    AbstractBaseModel,
     BaseMappedModel,
     ChildMappedModel,
-    Product,
-    AbstractBaseModel,
     ConcreteModel,
     ConcreteTableBase,
     ConcreteTableChild,
+    Employee,
+    Engineer,
+    Manager,
+    Product,
 )
 
 
@@ -81,7 +82,8 @@ def test_mixin_inheritance():
 def test_abstract_base_model_dto_creation():
     """Test that DTOs cannot be created directly from abstract SQLAlchemy models."""
     with pytest.raises(
-        TypeError, match="Cannot create DTO from abstract or unmapped SQLAlchemy model"
+        TypeError,
+        match="Cannot create DTO from abstract or unmapped SQLAlchemy model",
     ):  # Adjust match string if needed
 
         class AbstractDTO(DTO[AbstractBaseModel]):
@@ -166,6 +168,7 @@ def test_concrete_table_inheritance_dtos():
     # In concrete table inheritance, child tables have all columns, including those from the base.
     child_fields = ConcreteTableChildDTO.model_fields
     assert list(child_fields.keys()) == ["id", "base_data", "child_data"]
+
 
 def test_joined_table_inheritance_foreign_key():
     """Test that the foreign key in joined table inheritance is handled correctly."""

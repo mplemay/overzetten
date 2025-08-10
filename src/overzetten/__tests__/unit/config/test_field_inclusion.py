@@ -1,12 +1,11 @@
 from pydantic import EmailStr
-from typing import List
 
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import (
-    User,
     Address,
     BaseMappedModel,
     ChildMappedModel,
+    User,
 )
 
 
@@ -72,13 +71,13 @@ def test_include_relationships_vs_columns():
         config = DTOConfig(
             include={User.name, User.addresses},
             include_relationships=True,
-            mapped={User.addresses: List[AddressDTO]},
+            mapped={User.addresses: list[AddressDTO]},
         )
 
     fields = UserWithAddressesIncludedDTO.model_fields
     assert list(fields.keys()) == ["name", "addresses"]
     assert fields["name"].annotation is str
-    assert fields["addresses"].annotation is List[AddressDTO]
+    assert fields["addresses"].annotation is list[AddressDTO]
 
 
 def test_include_inherited_fields_selectively():
@@ -90,7 +89,7 @@ def test_include_inherited_fields_selectively():
                 ChildMappedModel.id,
                 ChildMappedModel.child_field,
                 ChildMappedModel.common_field,
-            }
+            },
         )
 
     fields = ChildMappedIncludedDTO.model_fields

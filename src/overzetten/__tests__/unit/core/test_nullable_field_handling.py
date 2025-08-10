@@ -1,4 +1,5 @@
 from typing import Optional
+
 from pydantic import EmailStr
 
 from overzetten import DTO, DTOConfig
@@ -45,7 +46,7 @@ def test_no_double_optional_wrapping():
     # The type should be Optional[int], not Optional[Optional[int]]
     assert fields["already_optional_field"].annotation is Optional[int]
     assert str(fields["already_optional_field"].annotation).startswith(
-        "typing.Optional[int"
+        "typing.Optional[int",
     )
 
 

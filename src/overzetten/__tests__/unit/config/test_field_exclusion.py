@@ -1,8 +1,8 @@
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import (
-    User,
-    ChildMappedModel,
     Address,
+    ChildMappedModel,
+    User,
 )
 
 
@@ -41,7 +41,7 @@ def test_exclude_all_fields_except_one():
                 User.uuid_field,
                 User.secret_field,
                 User.json_field,
-            }
+            },
         )
 
     fields = UserMinimalDTO.model_fields

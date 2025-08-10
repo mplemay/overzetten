@@ -1,11 +1,9 @@
-from typing import List, Optional
-
 from fastapi import APIRouter, FastAPI, Query
 from fastapi.testclient import TestClient
+from pydantic import Field
 
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import Address, User
-from pydantic import Field
 
 
 # Define DTOs for User and Address
@@ -15,16 +13,19 @@ class AddressDTO(DTO[Address]):
 
 class UserCreateDTO(DTO[User]):
     """DTO for creating a new user."""
+
     config = DTOConfig(
         exclude={User.id, User.created_at, User.addresses},
         model_name="UserCreateDTO",
-        mapped={User.name: Field(..., description="The user's name", examples=["John Doe"])}
+        mapped={User.name: Field(..., description="The user's name", examples=["John Doe"])},
     )
 
 
 class UserResponseDTO(DTO[User]):
     config = DTOConfig(
-        include_relationships=True, mapped={User.addresses: List[AddressDTO]}, model_name="UserResponseDTO"
+        include_relationships=True,
+        mapped={User.addresses: list[AddressDTO]},
+        model_name="UserResponseDTO",
     )
 
 
@@ -48,16 +49,16 @@ async def create_user(user: UserCreateDTO):
     return UserResponseDTO(**created_user_data)
 
 
-@router.get("/users/search", response_model=List[UserResponseDTO])
+@router.get("/users/search", response_model=list[UserResponseDTO])
 async def search_users(
-    name: Optional[str] = Query(None),
-    min_age: Optional[int] = Query(None),
+    name: str | None = Query(None),
+    min_age: int | None = Query(None),
 ):
     # Simulate searching users based on query parameters
     users = []
     if name == user_response_dto.name and (min_age is None or min_age <= user_response_dto.age):
         users.append(user_response_dto)
-    
+
     return users
 
 

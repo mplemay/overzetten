@@ -1,10 +1,11 @@
+from typing import Annotated, Literal, Optional
+
 import pytest
-from pydantic import EmailStr, HttpUrl, UUID4, Json, SecretStr, Field, BaseModel
-from typing import List, Dict, Union, Literal, Optional, Annotated
+from pydantic import UUID4, BaseModel, EmailStr, Field, HttpUrl, Json, SecretStr
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.models import User, UnionLiteralTestModel
-from sqlalchemy.orm.attributes import InstrumentedAttribute
+from overzetten.__tests__.fixtures.models import UnionLiteralTestModel, User
 
 
 def test_field_mapping_to_pydantic_types():
@@ -15,7 +16,7 @@ def test_field_mapping_to_pydantic_types():
             mapped={
                 User.name: EmailStr,
                 User.fullname: HttpUrl,
-            }
+            },
         )
 
     fields = UserMappedDTO.model_fields
@@ -30,7 +31,7 @@ def test_field_mapping_with_field_constraints():
         config = DTOConfig(
             mapped={
                 User.name: Field(min_length=3, max_length=50),
-            }
+            },
         )
 
     fields = UserConstrainedDTO.model_fields
@@ -46,14 +47,14 @@ def test_field_mapping_to_complex_types():
     class UserComplexMapDTO(DTO[User]):
         config = DTOConfig(
             mapped={
-                User.preferences: Dict[str, Union[int, str]],
-                User.tags: List[str],
-            }
+                User.preferences: dict[str, int | str],
+                User.tags: list[str],
+            },
         )
 
     fields = UserComplexMapDTO.model_fields
-    assert fields["preferences"].annotation is Optional[Dict[str, Union[int, str]]]
-    assert fields["tags"].annotation is Optional[List[str]]
+    assert fields["preferences"].annotation is Optional[dict[str, int | str]]
+    assert fields["tags"].annotation is Optional[list[str]]
 
 
 def test_field_mapping_to_specific_pydantic_types():
@@ -65,7 +66,7 @@ def test_field_mapping_to_specific_pydantic_types():
                 User.uuid_field: UUID4,
                 User.secret_field: SecretStr,
                 User.json_field: Json,
-            }
+            },
         )
 
     fields = UserSpecificMappedDTO.model_fields
@@ -83,15 +84,13 @@ def test_field_mapping_to_union_literal_and_custom_pydantic_models():
     class UnionLiteralMappedDTO(DTO[UnionLiteralTestModel]):
         config = DTOConfig(
             mapped={
-                UnionLiteralTestModel.status: Union[
-                    Literal["active"], Literal["inactive"]
-                ],
+                UnionLiteralTestModel.status: Literal["active", "inactive"],
                 UnionLiteralTestModel.value: CustomPydanticModel,
-            }
+            },
         )
 
     fields = UnionLiteralMappedDTO.model_fields
-    assert fields["status"].annotation is Union[Literal["active"], Literal["inactive"]]
+    assert fields["status"].annotation is Literal["active", "inactive"]
     assert fields["value"].annotation is CustomPydanticModel
 
 
@@ -126,10 +125,7 @@ def test_mapping_non_existent_field_errors():
         class UserDTOWithNonExistentMapping(DTO[User]):
             config = DTOConfig(mapped={non_existent_field: str})
 
-    assert (
-        "Mapped attribute 'non_existent_field' does not exist on SQLAlchemy model 'User'."
-        in str(excinfo.value)
-    )
+    assert "Mapped attribute 'non_existent_field' does not exist on SQLAlchemy model 'User'." in str(excinfo.value)
 
 
 def test_annotated_types_with_metadata():
@@ -137,14 +133,10 @@ def test_annotated_types_with_metadata():
 
     class UserAnnotatedDTO(DTO[User]):
         config = DTOConfig(
-            mapped={User.name: Annotated[str, Field(min_length=5, max_length=10)]}
+            mapped={User.name: Annotated[str, Field(min_length=5, max_length=10)]},
         )
 
     fields = UserAnnotatedDTO.model_fields
     assert fields["name"].annotation is str
-    assert any(
-        hasattr(m, "min_length") and m.min_length == 5 for m in fields["name"].metadata
-    )
-    assert any(
-        hasattr(m, "max_length") and m.max_length == 10 for m in fields["name"].metadata
-    )
+    assert any(hasattr(m, "min_length") and m.min_length == 5 for m in fields["name"].metadata)
+    assert any(hasattr(m, "max_length") and m.max_length == 10 for m in fields["name"].metadata)

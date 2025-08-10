@@ -1,4 +1,3 @@
-import pytest
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import User
 
@@ -8,8 +7,10 @@ def test_load_testing_dto_creation():
     num_dtos = 1000
     dtos = []
     for i in range(num_dtos):
+
         class DynamicUserDTO(DTO[User]):
             config = DTOConfig(model_name=f"DynamicUserDTO_{i}")
+
         dtos.append(DynamicUserDTO)
 
     assert len(dtos) == num_dtos

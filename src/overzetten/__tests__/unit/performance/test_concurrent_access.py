@@ -1,5 +1,3 @@
-import pytest
-import threading
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import User
 
@@ -42,6 +40,7 @@ def test_concurrent_access_conceptual():
     # by a single, sequential creation.
     class SimpleUserDTO(DTO[User]):
         config = DTOConfig(model_name="SimpleUserDTO")
+
     instance = SimpleUserDTO(
         id=1,
         name="Test User",

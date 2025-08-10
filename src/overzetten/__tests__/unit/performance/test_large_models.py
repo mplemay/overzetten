@@ -1,11 +1,13 @@
-import pytest
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import DeclarativeBase
+
 from overzetten import DTO
+
 
 # Dynamically create a SQLAlchemy model with many fields
 class Base(DeclarativeBase):
     pass
+
 
 def create_large_model(num_fields):
     attrs = {

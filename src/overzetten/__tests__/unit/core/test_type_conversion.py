@@ -1,21 +1,21 @@
-from typing import Optional, List, Dict, Any
 import datetime
+import uuid
 from decimal import Decimal
+from typing import Any, Optional
 
 from overzetten import DTO
 from overzetten.__tests__.fixtures.models import (
-    TypeConversionTestModel,
     CustomTypeModel,
-    MappedAnnotationTestModel,
     GenericMappedTestModel,
-    PostgresSpecificTypesModel,
+    MappedAnnotationTestModel,
     MyEnum,
-    MySQLSpecificTypesModel,
     MySQLEnum,
+    MySQLSpecificTypesModel,
+    NoPythonTypeModel,
+    PostgresSpecificTypesModel,
     SQLiteSpecificTypesModel,
+    TypeConversionTestModel,
 )
-import uuid
-from overzetten.__tests__.fixtures.models import NoPythonTypeModel
 
 
 def test_no_python_type_conversion():
@@ -76,8 +76,8 @@ def test_generic_type_conversion():
         pass
 
     fields = GenericMappedDTO.model_fields
-    assert fields["list_of_strings"].annotation is Optional[List[str]]
-    assert fields["dict_of_int"].annotation is Optional[Dict[str, int]]
+    assert fields["list_of_strings"].annotation is Optional[list[str]]
+    assert fields["dict_of_int"].annotation is Optional[dict[str, int]]
 
 
 def test_postgresql_specific_types():
@@ -89,7 +89,7 @@ def test_postgresql_specific_types():
     fields = PostgresSpecificTypesDTO.model_fields
     assert fields["uuid_field"].annotation is uuid.UUID
     assert fields["jsonb_field"].annotation is dict
-    assert fields["array_field"].annotation is List[str]
+    assert fields["array_field"].annotation is list[str]
     assert fields["enum_field"].annotation is MyEnum
 
 

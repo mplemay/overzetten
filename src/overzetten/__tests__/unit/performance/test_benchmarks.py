@@ -1,11 +1,3 @@
-import pytest
-from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.models import User
-from pydantic import BaseModel
-from dataclasses import dataclass
-import time
-
-
 def test_benchmark_comparisons_conceptual():
     """Conceptual test for benchmarking DTO creation against manual Pydantic models and dataclasses."""
     # This test is a placeholder for actual performance benchmarking.

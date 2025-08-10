@@ -1,6 +1,6 @@
-import pytest
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import DeclarativeBase
+
 from overzetten import DTO
 
 
@@ -15,7 +15,9 @@ def create_deep_inheritance_model(depth):
         model_name = f"Level{i}Model"
         attrs = {
             "__tablename__": f"level_{i}_model",
-            "id": Column(Integer, ForeignKey(f"level_{i-1}_model.id"), primary_key=True) if i > 0 else Column(Integer, primary_key=True),
+            "id": Column(Integer, ForeignKey(f"level_{i - 1}_model.id"), primary_key=True)
+            if i > 0
+            else Column(Integer, primary_key=True),
             f"data_level_{i}": Column(String, nullable=False),
         }
         # Inherit from the previous level's model
@@ -40,7 +42,7 @@ def test_deep_inheritance_dto_creation():
 
     assert len(fields) == len(expected_fields)
     for field_name in expected_fields:
-            if field_name == "id":
-                assert fields[field_name].annotation is int
-            else:
-                assert fields[field_name].annotation is str
+        if field_name == "id":
+            assert fields[field_name].annotation is int
+        else:
+            assert fields[field_name].annotation is str

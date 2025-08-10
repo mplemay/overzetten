@@ -1,7 +1,7 @@
 import pytest
+
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import User
-from unittest.mock import patch
 
 # Mock the internal cache for testing purposes
 # This assumes a simple dictionary-based cache for demonstration
@@ -49,7 +49,8 @@ def test_cache_invalidation_scenarios():
     # For this test, we rely on the metaclass creating a new class if config changes.
     class UserDTOVersion2(DTO[User]):
         config = DTOConfig(
-            model_name="InvalidateUserDTO", exclude={User.name}
+            model_name="InvalidateUserDTO",
+            exclude={User.name},
         )  # Different exclude
 
     assert UserDTOVersion1 is not UserDTOVersion2
@@ -64,7 +65,6 @@ def test_cache_size_limits_and_lru_behavior():
     # this would involve creating more DTOs than the cache size and
     # asserting that older ones are evicted.
     # For now, this is a placeholder as overzetten's current cache is implicit.
-    pass
 
 
 def test_thread_safety_of_cache():
@@ -72,18 +72,15 @@ def test_thread_safety_of_cache():
     # This would involve creating DTOs concurrently from multiple threads
     # and asserting consistency and lack of race conditions.
     # Requires a more complex setup with threading/multiprocessing.
-    pass
 
 
 def test_cache_memory_leaks_with_many_models():
     """Test for memory leaks when generating many DTOs (conceptual)."""
     # This would involve generating a large number of unique DTOs
     # and monitoring memory usage, potentially using memory profiling tools.
-    pass
 
 
 def test_cache_behavior_with_dynamic_imports():
     """Test cache behavior when models/DTOs are dynamically imported (conceptual)."""
     # This would involve simulating dynamic imports and checking if the cache
     # correctly handles models loaded at different times/from different modules.
-    pass

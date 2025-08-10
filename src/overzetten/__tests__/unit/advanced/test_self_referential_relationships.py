@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import Node
@@ -12,7 +12,7 @@ def test_self_referential_relationship_mapping():
             include_relationships=True,
             mapped={
                 Node.parent_node: Optional["NodeDTO"],
-                Node.child_nodes: List["NodeDTO"],
+                Node.child_nodes: list["NodeDTO"],
             },
         )
 
@@ -21,7 +21,7 @@ def test_self_referential_relationship_mapping():
     assert "parent_node" in node_fields
     assert node_fields["parent_node"].annotation is Optional[NodeDTO]
     assert "child_nodes" in node_fields
-    assert node_fields["child_nodes"].annotation == List[NodeDTO]
+    assert node_fields["child_nodes"].annotation == list[NodeDTO]
 
     # Test instantiation (no infinite recursion)
     root_node = NodeDTO(id=1, name="Root")

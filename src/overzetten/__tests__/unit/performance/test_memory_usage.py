@@ -1,4 +1,3 @@
-import pytest
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import User
 
@@ -30,7 +29,9 @@ def test_memory_profiling_conceptual():
     num_dtos = 100
     dtos = []
     for i in range(num_dtos):
+
         class DynamicUserDTO(DTO[User]):
             config = DTOConfig(model_name=f"MemUserDTO_{i}")
+
         dtos.append(DynamicUserDTO)
     assert len(dtos) == num_dtos

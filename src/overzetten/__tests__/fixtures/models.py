@@ -2,7 +2,7 @@ import datetime
 import enum
 import uuid
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from sqlalchemy import (
     JSON,
@@ -51,7 +51,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(30))
-    fullname: Mapped[Optional[str]]
+    fullname: Mapped[str | None]
     age: Mapped[int] = mapped_column(Integer)
     is_active: Mapped[bool] = mapped_column(Boolean)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime)
@@ -59,13 +59,13 @@ class User(Base):
     last_login: Mapped[datetime.time] = mapped_column(Time)
     balance: Mapped[float] = mapped_column(Float)
     rating: Mapped[Decimal] = mapped_column(Numeric(10, 2))
-    data: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
-    preferences: Mapped[Optional[dict]] = mapped_column(JSON)
-    tags: Mapped[Optional[list]] = mapped_column(JSON)
-    uuid_field: Mapped[Optional[str]] = mapped_column(String(36))
-    secret_field: Mapped[Optional[str]] = mapped_column(Text)
-    json_field: Mapped[Optional[dict]] = mapped_column(JSON)
-    addresses: Mapped[List["Address"]] = relationship(back_populates="user")
+    data: Mapped[bytes | None] = mapped_column(LargeBinary)
+    preferences: Mapped[dict | None] = mapped_column(JSON)
+    tags: Mapped[list | None] = mapped_column(JSON)
+    uuid_field: Mapped[str | None] = mapped_column(String(36))
+    secret_field: Mapped[str | None] = mapped_column(Text)
+    json_field: Mapped[dict | None] = mapped_column(JSON)
+    addresses: Mapped[list["Address"]] = relationship(back_populates="user")
 
     @hybrid_property
     def full_name(self):
@@ -108,17 +108,19 @@ class NullableTestModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     required_field: Mapped[str]
-    nullable_field: Mapped[Optional[str]]
-    already_optional_field: Mapped[Optional[int]]
-    nullable_email: Mapped[Optional[str]] = mapped_column(String)
+    nullable_field: Mapped[str | None]
+    already_optional_field: Mapped[int | None]
+    nullable_email: Mapped[str | None] = mapped_column(String)
 
 
 class ServerNullableTestModel(Base):
     __tablename__ = "server_nullable_test"
     id: Mapped[int] = mapped_column(primary_key=True)
     # Nullable with a server default
-    server_nullable_field: Mapped[Optional[str]] = mapped_column(
-        String, nullable=True, server_default="server_default_value"
+    server_nullable_field: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True,
+        server_default="server_default_value",
     )
     # Not nullable with a server default
     server_not_nullable_field: Mapped[str] = mapped_column(String, server_default="another_server_default")
@@ -140,18 +142,20 @@ class RequiredFieldTestModel(Base):
     # Not nullable, no default = required
     required_no_default: Mapped[str] = mapped_column(String)
     # Nullable, no default = Optional[T] with None default
-    nullable_no_default: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    nullable_no_default: Mapped[str | None] = mapped_column(String, nullable=True)
     # Not nullable, has default = T with default
     required_with_default: Mapped[str] = mapped_column(String, default="default_value")
     # Nullable, has default = Optional[T] with default
-    nullable_with_default: Mapped[Optional[str]] = mapped_column(String, nullable=True, default="nullable_default")
+    nullable_with_default: Mapped[str | None] = mapped_column(String, nullable=True, default="nullable_default")
     # Not nullable, has server_default = T with default
     required_with_server_default: Mapped[str] = mapped_column(String, server_default="server_default_value")
     # Boolean field with default
     boolean_with_default: Mapped[bool] = mapped_column(Boolean, default=False)
     # Nullable, has server_default = Optional[T] with None default (from Pydantic perspective)
-    nullable_with_server_default: Mapped[Optional[str]] = mapped_column(
-        String, nullable=True, server_default="nullable_server_default"
+    nullable_with_server_default: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True,
+        server_default="nullable_server_default",
     )
 
 
@@ -160,9 +164,9 @@ class Node(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     # Self-referential relationship
-    parent_node_id: Mapped[Optional[int]] = mapped_column(ForeignKey("nodes.id"))
+    parent_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id"))
     parent_node: Mapped[Optional["Node"]] = relationship(back_populates="child_nodes", remote_side=[id])
-    child_nodes: Mapped[List["Node"]] = relationship(back_populates="parent_node")
+    child_nodes: Mapped[list["Node"]] = relationship(back_populates="parent_node")
 
 
 class BaseMappedModel(Base):
@@ -188,7 +192,7 @@ class Product(TimestampMixin, Base):
     __tablename__ = "products"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    description: Mapped[Optional[str]]
+    description: Mapped[str | None]
 
 
 class AbstractBaseModel(Base):
@@ -293,8 +297,8 @@ class MappedAnnotationTestModel(Base):
 class GenericMappedTestModel(Base):
     __tablename__ = "generic_mapped_test"
     id: Mapped[int] = mapped_column(primary_key=True)
-    list_of_strings: Mapped[Optional[List[str]]] = mapped_column(JSON)
-    dict_of_int: Mapped[Optional[Dict[str, int]]] = mapped_column(JSON)
+    list_of_strings: Mapped[list[str] | None] = mapped_column(JSON)
+    dict_of_int: Mapped[dict[str, int] | None] = mapped_column(JSON)
 
 
 class UnionLiteralTestModel(Base):
@@ -325,7 +329,7 @@ class PostgresSpecificTypesModel(PostgresBase):
     id: Mapped[int] = mapped_column(primary_key=True)
     uuid_field: Mapped[uuid.UUID] = mapped_column(postgresql.UUID(as_uuid=True))
     jsonb_field: Mapped[dict] = mapped_column(postgresql.JSONB)
-    array_field: Mapped[List[str]] = mapped_column(postgresql.ARRAY(String))
+    array_field: Mapped[list[str]] = mapped_column(postgresql.ARRAY(String))
     enum_field: Mapped[MyEnum] = mapped_column(postgresql.ENUM(MyEnum))
 
 
@@ -367,14 +371,14 @@ class Left(Base):
     __tablename__ = "left_table"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    rights: Mapped[List["Right"]] = relationship(secondary=association_table, back_populates="lefts")
+    rights: Mapped[list["Right"]] = relationship(secondary=association_table, back_populates="lefts")
 
 
 class Right(Base):
     __tablename__ = "right_table"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    lefts: Mapped[List["Left"]] = relationship(secondary=association_table, back_populates="rights")
+    lefts: Mapped[list["Left"]] = relationship(secondary=association_table, back_populates="rights")
 
 
 # Many-to-Many Relationship (Association Object / Through Model)
@@ -392,13 +396,13 @@ class LeftThrough(Base):
     __tablename__ = "left_through_table"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    right_associations: Mapped[List["ThroughModel"]] = relationship(back_populates="left")
-    rights: Mapped[List["RightThrough"]] = relationship(secondary="through_table", back_populates="lefts")
+    right_associations: Mapped[list["ThroughModel"]] = relationship(back_populates="left")
+    rights: Mapped[list["RightThrough"]] = relationship(secondary="through_table", back_populates="lefts")
 
 
 class RightThrough(Base):
     __tablename__ = "right_through_table"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    left_associations: Mapped[List["ThroughModel"]] = relationship(back_populates="right")
-    lefts: Mapped[List["LeftThrough"]] = relationship(secondary="through_table", back_populates="rights")
+    left_associations: Mapped[list["ThroughModel"]] = relationship(back_populates="right")
+    lefts: Mapped[list["LeftThrough"]] = relationship(secondary="through_table", back_populates="rights")

@@ -1,5 +1,5 @@
 from overzetten import DTO, DTOConfig
-from overzetten.__tests__.fixtures.models import User, Address
+from overzetten.__tests__.fixtures.models import Address, User
 
 
 def test_model_name_override():
@@ -60,6 +60,7 @@ def test_naming_does_not_affect_functionality():
     assert instance.id == 1
     assert instance.name == "test"
 
+
 def test_name_conflicts():
     """Test that name conflicts are handled gracefully."""
 
@@ -73,6 +74,7 @@ def test_name_conflicts():
     assert AddressDTO.__name__ == "UserDTO"
     assert UserDTO is not AddressDTO
 
+
 def test_very_long_model_name():
     """Test that a very long model name can be used."""
     long_name = "a" * 1000
@@ -82,6 +84,7 @@ def test_very_long_model_name():
 
     assert LongNameDTO.__name__ == long_name
     assert LongNameDTO.__qualname__ == long_name
+
 
 def test_model_name_with_special_characters():
     """Test that a model name with special characters can be used."""

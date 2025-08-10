@@ -1,7 +1,8 @@
-from pydantic import BaseModel
-from typing import Optional
 import datetime
 from decimal import Decimal
+from typing import Optional
+
+from pydantic import BaseModel
 
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import User

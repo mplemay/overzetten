@@ -1,9 +1,8 @@
-import pytest
-from sqlalchemy import Column, Integer, String, func
-from sqlalchemy.orm import synonym, column_property
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import column_property, synonym
 
 from overzetten import DTO
-from overzetten.__tests__.fixtures.models import Base, Employee, Manager, Engineer
+from overzetten.__tests__.fixtures.models import Base, Employee, Engineer, Manager
 
 
 class SynonymModel(Base):
