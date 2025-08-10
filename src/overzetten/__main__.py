@@ -106,7 +106,9 @@ class DTOMeta(type):
 
     @staticmethod
     def _create_pydantic_model(
-        sqlalchemy_model: type[DeclarativeBase], config: DTOConfig, doc: str | None = None
+        sqlalchemy_model: type[DeclarativeBase],
+        config: DTOConfig,
+        doc: str | None = None,
     ) -> type[BaseModel]:
         """Create a Pydantic model from SQLAlchemy model using DTO config."""
         # Generate model name
@@ -167,7 +169,9 @@ class DTOMeta(type):
                 # We'll pass the property itself to _get_field_type for specific handling.
                 field_type = DTOMeta._get_field_type(sqlalchemy_model, attr, prop, config)
                 default_value = DTOMeta._get_field_default(
-                    attr, prop, config
+                    attr,
+                    prop,
+                    config,
                 )  # Pass prop as column for default handling
 
                 fields[prop_name] = (field_type, default_value)

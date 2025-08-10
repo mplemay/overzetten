@@ -42,7 +42,7 @@ def test_basic_dto_creation():
     # 3. Test that the field types are correct
     assert fields["id"].annotation is int
     assert fields["name"].annotation is str
-    assert fields["fullname"].annotation is Optional[str]
+    assert fields["fullname"].annotation == Optional[str]
     assert fields["age"].annotation is int
     assert fields["is_active"].annotation is bool
     assert fields["created_at"].annotation is datetime.datetime
@@ -50,7 +50,7 @@ def test_basic_dto_creation():
     assert fields["last_login"].annotation is datetime.time
     assert fields["balance"].annotation is float
     assert fields["rating"].annotation is Decimal
-    assert fields["data"].annotation is Optional[bytes]
+    assert fields["data"].annotation == Optional[bytes]
 
 
 def test_dto_naming_and_module():

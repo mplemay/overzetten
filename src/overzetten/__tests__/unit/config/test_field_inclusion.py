@@ -77,7 +77,7 @@ def test_include_relationships_vs_columns():
     fields = UserWithAddressesIncludedDTO.model_fields
     assert list(fields.keys()) == ["name", "addresses"]
     assert fields["name"].annotation is str
-    assert fields["addresses"].annotation is list[AddressDTO]
+    assert fields["addresses"].annotation == list[AddressDTO]
 
 
 def test_include_inherited_fields_selectively():

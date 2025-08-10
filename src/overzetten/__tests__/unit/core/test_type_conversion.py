@@ -25,7 +25,7 @@ def test_no_python_type_conversion():
         pass
 
     fields = NoPythonTypeDTO.model_fields
-    assert fields["no_python_field"].annotation is Any
+    assert fields["no_python_field"].annotation == Any
 
 
 def test_type_conversion():
@@ -36,16 +36,16 @@ def test_type_conversion():
 
     fields = TypeConversionTestDTO.model_fields
 
-    assert fields["string_field"].annotation is str
-    assert fields["integer_field"].annotation is int
-    assert fields["boolean_field"].annotation is bool
-    assert fields["datetime_field"].annotation is datetime.datetime
-    assert fields["date_field"].annotation is datetime.date
-    assert fields["time_field"].annotation is datetime.time
-    assert fields["text_field"].annotation is str
-    assert fields["float_field"].annotation is float
-    assert fields["numeric_field"].annotation is Decimal
-    assert fields["large_binary_field"].annotation is bytes
+    assert fields["string_field"].annotation == str
+    assert fields["integer_field"].annotation == int
+    assert fields["boolean_field"].annotation == bool
+    assert fields["datetime_field"].annotation == datetime.datetime
+    assert fields["date_field"].annotation == datetime.date
+    assert fields["time_field"].annotation == datetime.time
+    assert fields["text_field"].annotation == str
+    assert fields["float_field"].annotation == float
+    assert fields["numeric_field"].annotation == Decimal
+    assert fields["large_binary_field"].annotation == bytes
 
 
 def test_custom_sqlalchemy_type():
@@ -55,7 +55,7 @@ def test_custom_sqlalchemy_type():
         pass
 
     fields = CustomTypeDTO.model_fields
-    assert fields["custom_field"].annotation is int
+    assert fields["custom_field"].annotation == int
 
 
 def test_mapped_annotations_vs_raw_column_types():
@@ -65,8 +65,8 @@ def test_mapped_annotations_vs_raw_column_types():
         pass
 
     fields = MappedAnnotationDTO.model_fields
-    assert fields["mapped_str"].annotation is str
-    assert fields["raw_str"].annotation is str
+    assert fields["mapped_str"].annotation == str
+    assert fields["raw_str"].annotation == str
 
 
 def test_generic_type_conversion():
@@ -76,8 +76,8 @@ def test_generic_type_conversion():
         pass
 
     fields = GenericMappedDTO.model_fields
-    assert fields["list_of_strings"].annotation is Optional[list[str]]
-    assert fields["dict_of_int"].annotation is Optional[dict[str, int]]
+    assert fields["list_of_strings"].annotation == Optional[list[str]]
+    assert fields["dict_of_int"].annotation == Optional[dict[str, int]]
 
 
 def test_postgresql_specific_types():
@@ -87,10 +87,10 @@ def test_postgresql_specific_types():
         pass
 
     fields = PostgresSpecificTypesDTO.model_fields
-    assert fields["uuid_field"].annotation is uuid.UUID
-    assert fields["jsonb_field"].annotation is dict
-    assert fields["array_field"].annotation is list[str]
-    assert fields["enum_field"].annotation is MyEnum
+    assert fields["uuid_field"].annotation == uuid.UUID
+    assert fields["jsonb_field"].annotation == dict
+    assert fields["array_field"].annotation == list[str]
+    assert fields["enum_field"].annotation == MyEnum
 
 
 def test_mysql_specific_types():
@@ -100,9 +100,9 @@ def test_mysql_specific_types():
         pass
 
     fields = MySQLSpecificTypesDTO.model_fields
-    assert fields["year_field"].annotation is int
-    assert fields["set_field"].annotation is str
-    assert fields["enum_field"].annotation is MySQLEnum
+    assert fields["year_field"].annotation == int
+    assert fields["set_field"].annotation == str
+    assert fields["enum_field"].annotation == MySQLEnum
 
 
 def test_sqlite_specific_types():
@@ -112,7 +112,7 @@ def test_sqlite_specific_types():
         pass
 
     fields = SQLiteSpecificTypesDTO.model_fields
-    assert fields["boolean_as_int"].annotation is bool
-    assert fields["date_as_text"].annotation is datetime.date
-    assert fields["time_as_text"].annotation is datetime.time
-    assert fields["datetime_as_text"].annotation is datetime.datetime
+    assert fields["boolean_as_int"].annotation == bool
+    assert fields["date_as_text"].annotation == datetime.date
+    assert fields["time_as_text"].annotation == datetime.time
+    assert fields["datetime_as_text"].annotation == datetime.datetime
