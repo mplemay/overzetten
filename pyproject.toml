@@ -44,7 +44,7 @@ quote-style = "double"
 select = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
-"brugge/__tests__/**/*" = ["S101", "PLR2004", "INP001"]
+"src/overzetten/__tests__/**/*" = ["S101", "PLR2004", "INP001"]
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "double"
