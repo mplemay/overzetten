@@ -1,10 +1,12 @@
+"""Tests for handling circular references in DTO generation."""
+
 from typing import Optional
 
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import Address, User
 
 
-def test_circular_mapping_references():
+def test_circular_mapping_references() -> None:
     """Test that circular mapping references between DTOs are handled correctly."""
 
     class UserCircleDTO(DTO[User]):
@@ -32,4 +34,4 @@ def test_circular_mapping_references():
     address_fields = AddressCircleDTO.model_fields
 
     assert user_fields["addresses"].annotation == list[AddressCircleDTO]
-    assert address_fields["user"].annotation == Optional[UserCircleDTO]
+    assert address_fields["user"].annotation == UserCircleDTO | None
