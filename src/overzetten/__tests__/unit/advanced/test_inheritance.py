@@ -1,3 +1,5 @@
+"""Tests for DTO generation with various inheritance patterns."""
+
 import datetime
 
 import pytest
@@ -17,7 +19,7 @@ from overzetten.__tests__.fixtures.models import (
 )
 
 
-def test_single_table_inheritance():
+def test_single_table_inheritance() -> None:
     """Test DTO creation from models with single table inheritance."""
 
     class EmployeeDTO(DTO[Employee]):
@@ -30,14 +32,14 @@ def test_single_table_inheritance():
         pass
 
     # Test parent DTO
-    assert list(EmployeeDTO.model_fields.keys()) == ["id", "type"]
+    assert list(EmployeeDTO.model_fields.keys()) == ["id", "type"]  # type: ignore[unresolved-attribute]
 
     # Test child DTOs
-    assert list(ManagerDTO.model_fields.keys()) == ["id", "type", "manager_data"]
-    assert list(EngineerDTO.model_fields.keys()) == ["id", "type", "engineer_info"]
+    assert list(ManagerDTO.model_fields.keys()) == ["id", "type", "manager_data"]  # type: ignore[unresolved-attribute]
+    assert list(EngineerDTO.model_fields.keys()) == ["id", "type", "engineer_info"]  # type: ignore[unresolved-attribute]
 
 
-def test_joined_table_inheritance_field_distribution():
+def test_joined_table_inheritance_field_distribution() -> None:
     """Test DTO creation from models with joined table inheritance, ensuring all fields are present."""
 
     class BaseMappedDTO(DTO[BaseMappedModel]):
@@ -47,26 +49,26 @@ def test_joined_table_inheritance_field_distribution():
         pass
 
     # Test base DTO
-    base_fields = BaseMappedDTO.model_fields
+    base_fields = BaseMappedDTO.model_fields  # type: ignore[unresolved-attribute]
     assert "id" in base_fields
     assert "base_field" in base_fields
     assert "common_field" in base_fields
 
     # Test child DTO - should contain fields from both base and child tables
-    child_fields = ChildMappedDTO.model_fields
+    child_fields = ChildMappedDTO.model_fields  # type: ignore[unresolved-attribute]
     assert "id" in child_fields
     assert "base_field" in child_fields
     assert "common_field" in child_fields
     assert "child_field" in child_fields
 
 
-def test_mixin_inheritance():
+def test_mixin_inheritance() -> None:
     """Test DTO creation from models that use mixin classes."""
 
     class ProductDTO(DTO[Product]):
         pass
 
-    fields = ProductDTO.model_fields
+    fields = ProductDTO.model_fields  # type: ignore[unresolved-attribute]
 
     assert "id" in fields
     assert "name" in fields
@@ -79,7 +81,7 @@ def test_mixin_inheritance():
     assert fields["updated_at"].annotation is datetime.datetime
 
 
-def test_abstract_base_model_dto_creation():
+def test_abstract_base_model_dto_creation() -> None:
     """Test that DTOs cannot be created directly from abstract SQLAlchemy models."""
     with pytest.raises(
         TypeError,
@@ -93,13 +95,13 @@ def test_abstract_base_model_dto_creation():
     class ConcreteDTO(DTO[ConcreteModel]):
         pass
 
-    fields = ConcreteDTO.model_fields
+    fields = ConcreteDTO.model_fields  # type: ignore[unresolved-attribute]
     assert "id" in fields
     assert "abstract_field" in fields
     assert "concrete_field" in fields
 
 
-def test_discriminator_column_handling():
+def test_discriminator_column_handling() -> None:
     """Test that the discriminator column is included in single table inheritance DTOs."""
 
     class EmployeeDTO(DTO[Employee]):
@@ -112,13 +114,13 @@ def test_discriminator_column_handling():
         pass
 
     # The 'type' column is the discriminator and should be present
-    assert "type" in EmployeeDTO.model_fields
-    assert "type" in ManagerDTO.model_fields
-    assert "type" in EngineerDTO.model_fields
-    assert EmployeeDTO.model_fields["type"].annotation is str
+    assert "type" in EmployeeDTO.model_fields  # type: ignore[unresolved-attribute]
+    assert "type" in ManagerDTO.model_fields  # type: ignore[unresolved-attribute]
+    assert "type" in EngineerDTO.model_fields  # type: ignore[unresolved-attribute]
+    assert EmployeeDTO.model_fields["type"].annotation is str  # type: ignore[unresolved-attribute]
 
 
-def test_inherited_field_exclusion_and_mapping():
+def test_inherited_field_exclusion_and_mapping() -> None:
     """Test inherited field exclusion and mapping in joined table inheritance."""
 
     class BaseMappedDTO(DTO[BaseMappedModel]):
@@ -134,15 +136,16 @@ def test_inherited_field_exclusion_and_mapping():
         )
 
     # Base DTO should exclude base_field and map common_field
-    base_fields = BaseMappedDTO.model_fields
+    base_fields = BaseMappedDTO.model_fields  # type: ignore[unresolved-attribute]
     assert "base_field" not in base_fields
     assert base_fields["common_field"].annotation is str
     assert "id" in base_fields
 
-    # Child DTO should exclude child_field and map common_field, and inherit base_field (which was excluded in BaseMappedDTO)
+    # Child DTO should exclude child_field and map common_field, and inherit base_field (
+    # which was excluded in BaseMappedDTO)
     # Note: The base_field will still be present in ChildMappedDTO if it's not explicitly excluded in ChildMappedDTO
     # and if it's part of the ChildMappedModel's columns. This tests the behavior.
-    child_fields = ChildMappedDTO.model_fields
+    child_fields = ChildMappedDTO.model_fields  # type: ignore[unresolved-attribute]
     assert "child_field" not in child_fields
     assert child_fields["common_field"].annotation is str
     assert "id" in child_fields
@@ -151,7 +154,7 @@ def test_inherited_field_exclusion_and_mapping():
     assert "base_field" in child_fields
 
 
-def test_concrete_table_inheritance_dtos():
+def test_concrete_table_inheritance_dtos() -> None:
     """Test DTO creation from models with concrete table inheritance."""
 
     class ConcreteTableBaseDTO(DTO[ConcreteTableBase]):
@@ -161,22 +164,22 @@ def test_concrete_table_inheritance_dtos():
         pass
 
     # Base DTO should only have its own fields
-    base_fields = ConcreteTableBaseDTO.model_fields
+    base_fields = ConcreteTableBaseDTO.model_fields  # type: ignore[unresolved-attribute]
     assert list(base_fields.keys()) == ["id", "base_data"]
 
     # Child DTO should have its own fields (including inherited ones if they are part of its table)
     # In concrete table inheritance, child tables have all columns, including those from the base.
-    child_fields = ConcreteTableChildDTO.model_fields
+    child_fields = ConcreteTableChildDTO.model_fields  # type: ignore[unresolved-attribute]
     assert list(child_fields.keys()) == ["id", "base_data", "child_data"]
 
 
-def test_joined_table_inheritance_foreign_key():
+def test_joined_table_inheritance_foreign_key() -> None:
     """Test that the foreign key in joined table inheritance is handled correctly."""
 
     class ChildMappedDTO(DTO[ChildMappedModel]):
         pass
 
     # The foreign key column (id) should be present and correctly typed
-    child_fields = ChildMappedDTO.model_fields
+    child_fields = ChildMappedDTO.model_fields  # type: ignore[unresolved-attribute]
     assert "id" in child_fields
     assert child_fields["id"].annotation is int
