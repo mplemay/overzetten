@@ -1,4 +1,6 @@
-from typing import Any, Union
+"""Tests for error handling and edge cases in DTO generation."""
+
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -11,10 +13,10 @@ from overzetten.__tests__.fixtures.models import User
 
 
 class Base(DeclarativeBase):
-    pass
+    """Base class for SQLAlchemy declarative models in tests."""
 
 
-def test_abstract_model_error():
+def test_abstract_model_error() -> None:
     """Test that creating a DTO from an abstract model raises TypeError."""
 
     class AbstractModel(Base):
@@ -31,7 +33,7 @@ def test_abstract_model_error():
             pass
 
 
-def test_excluding_and_including_same_field():
+def test_excluding_and_including_same_field() -> None:
     """Test that excluding and including the same field results in exclusion."""
 
     class UserConflictDTO(DTO[User]):
@@ -42,7 +44,7 @@ def test_excluding_and_including_same_field():
     assert "name" in fields
 
 
-def test_invalid_type_mapping_non_type_object():
+def test_invalid_type_mapping_non_type_object() -> None:
     """Test that mapping to a non-type object raises an appropriate error."""
 
     class InvalidMappedDTO(DTO[User]):
@@ -52,7 +54,7 @@ def test_invalid_type_mapping_non_type_object():
         InvalidMappedDTO.model_rebuild()
 
 
-def test_mapping_to_incompatible_type():
+def test_mapping_to_incompatible_type() -> None:
     """Test that mapping to an incompatible type results in Pydantic validation error on instantiation."""
 
     class IncompatibleMappedDTO(DTO[User]):
@@ -73,7 +75,7 @@ def test_mapping_to_incompatible_type():
         )
 
 
-def test_generic_type_edge_cases():
+def test_generic_type_edge_cases() -> None:
     """Test generic type edge cases (e.g., Mapped[Any], Mapped[Union])."""
 
     class GenericEdgeCaseModel(Base):
@@ -87,4 +89,4 @@ def test_generic_type_edge_cases():
 
     fields = GenericEdgeCaseDTO.model_fields
     assert fields["any_field"].annotation is Any
-    assert fields["union_field"].annotation == Union[str, int]
+    assert fields["union_field"].annotation == str | int
