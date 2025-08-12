@@ -45,9 +45,7 @@ def test_no_double_optional_wrapping():
     fields = NullableTestDTO.model_fields
     # The type should be Optional[int], not Optional[Optional[int]]
     assert fields["already_optional_field"].annotation == Optional[int]
-    assert str(fields["already_optional_field"].annotation).startswith(
-        "typing.Optional[int",
-    )
+    assert fields["already_optional_field"].annotation == int | None
 
 
 def test_nullable_field_with_custom_type_mapping():

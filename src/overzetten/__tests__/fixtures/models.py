@@ -83,8 +83,8 @@ class Address(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     email_address: Mapped[str]
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    user: Mapped[User] = relationship(back_populates="addresses")
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    user: Mapped[User | None] = relationship(back_populates="addresses")
 
 
 class TypeConversionTestModel(Base):

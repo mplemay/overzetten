@@ -19,7 +19,7 @@ def test_self_referential_relationship_mapping():
     # Test that NodeDTO correctly includes parent_node and child_nodes
     node_fields = NodeDTO.model_fields
     assert "parent_node" in node_fields
-    assert node_fields["parent_node"].annotation is Optional[NodeDTO]
+    assert node_fields["parent_node"].annotation == Optional[NodeDTO]
     assert "child_nodes" in node_fields
     assert node_fields["child_nodes"].annotation == list[NodeDTO]
 

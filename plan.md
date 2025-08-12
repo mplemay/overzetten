@@ -224,14 +224,14 @@ This document outlines a comprehensive testing plan for the `overzetten` library
 - Request/Response Models:
     - DTOs as request bodies with validation.
     - DTOs as response models with serialization.
-    - DTOs in path parameters, query parameters.
+    - ~DTOs in path parameters, query parameters.~
 - OpenAPI Generation:
-    - Schema generation correctness.
-    - Documentation strings, examples.
-    - Type hints in generated schemas.
+    - ~Schema generation correctness.~
+    - ~Documentation strings, examples.~
+    - ~Type hints in generated schemas.~
 - Validation Behavior:
-    - Request validation errors.
-    - Response serialization errors.
+    - ~Request validation errors.~
+    - ~Response serialization errors.~
     - Custom validator interaction.
 - Advanced FastAPI Features:
     - Dependency injection with DTOs.

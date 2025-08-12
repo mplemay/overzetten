@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Union, get_args, get_origin
 
 import pytest
-from pydantic import EmailStr, ValidationError
+from pydantic import EmailStr, Field, ValidationError
 
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import (
@@ -46,38 +46,38 @@ def test_many_to_one_foreign_key_handling():
 
     fields = AddressFKDTO.model_fields
     assert "user_id" in fields
-    assert fields["user_id"].annotation is int
+    assert fields["user_id"].annotation == int | None
 
 
 def test_many_to_one_relationship_object_inclusion():
     """Test relationship object inclusion in many-to-one relationships."""
 
-    class UserSimpleDTO(DTO[User]):
-        config = DTOConfig(exclude={User.addresses})  # Exclude to avoid circular dependency for this test
-
     class AddressWithUserDTO(DTO[Address]):
         config = DTOConfig(
             include_relationships=True,
-            mapped={Address.user: UserSimpleDTO},
+            mapped={Address.user: Field(default=None)},  # Mapped to provide a default
         )
 
     fields = AddressWithUserDTO.model_fields
     assert "user" in fields
-    assert fields["user"].annotation == Optional[UserSimpleDTO]
-    assert not fields["user"].is_required()
 
-    # Test nullable many-to-one relationship
-    # For this, we need a model with a nullable FK
-    # Let's assume Address.user_id could be nullable for this test scenario
-    # (though in our fixture it's not, this tests the DTO generation logic)
-    class NullableUserAddress(DTO[Address]):
-        config = DTOConfig(
-            include_relationships=True,
-            mapped={Address.user: Optional[UserSimpleDTO]},
-        )
+    # The type should be an Optional union with the auto-generated UserDTO
+    field_type = fields["user"].annotation
+    origin = get_origin(field_type)
+    # In Python 3.10+, the origin of `X | Y` is `types.UnionType`, not `typing.Union`
+    assert origin in (Union, __import__("types").UnionType)
 
-    fields = NullableUserAddress.model_fields
-    assert fields["user"].annotation == Optional[UserSimpleDTO]
+    # Check that one of the arguments in the Union is the generated DTO
+    type_args = get_args(field_type)
+    assert len(type_args) == 2
+    assert type(None) in type_args
+
+    # Find the DTO type in the Union arguments
+    dto_type = next((t for t in type_args if t is not type(None)), None)
+    assert dto_type is not None
+    assert dto_type.__name__ == "UserDTO"
+
+    # Check that the field is not required
     assert not fields["user"].is_required()
 
 

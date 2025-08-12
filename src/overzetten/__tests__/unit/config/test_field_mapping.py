@@ -21,7 +21,7 @@ def test_field_mapping_to_pydantic_types():
 
     fields = UserMappedDTO.model_fields
     assert fields["name"].annotation is EmailStr
-    assert fields["fullname"].annotation is Optional[HttpUrl]
+    assert fields["fullname"].annotation == Optional[HttpUrl]
 
 
 def test_field_mapping_with_field_constraints():
@@ -53,8 +53,8 @@ def test_field_mapping_to_complex_types():
         )
 
     fields = UserComplexMapDTO.model_fields
-    assert fields["preferences"].annotation is Optional[dict[str, int | str]]
-    assert fields["tags"].annotation is Optional[list[str]]
+    assert fields["preferences"].annotation == Optional[dict[str, int | str]]
+    assert fields["tags"].annotation == Optional[list[str]]
 
 
 def test_field_mapping_to_specific_pydantic_types():
@@ -71,8 +71,8 @@ def test_field_mapping_to_specific_pydantic_types():
 
     fields = UserSpecificMappedDTO.model_fields
     assert fields["uuid_field"].annotation == Optional[UUID4]
-    assert fields["secret_field"].annotation is Optional[SecretStr]
-    assert fields["json_field"].annotation is Optional[Json]
+    assert fields["secret_field"].annotation == Optional[SecretStr]
+    assert fields["json_field"].annotation == Optional[Json]
 
 
 def test_field_mapping_to_union_literal_and_custom_pydantic_models():
