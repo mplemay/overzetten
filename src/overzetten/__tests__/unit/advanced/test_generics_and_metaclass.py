@@ -44,9 +44,11 @@ def test_multiple_type_parameters_future_expansion() -> None:
     assert True
 
 
-def test_nested_generic_scenarios() -> None:
-    """Test nested generic scenarios."""
+def test_generic_type_resolution_with_inheritance() -> None:
+    """Test generic type resolution with inheritance."""
     # This test is a placeholder for future expansion.
-    # It would involve defining SQLAlchemy models with Mapped[List[Mapped[Dict[str, int]]]]
-    # and asserting that the DTO correctly reflects this nested generic structure.
+    # It would involve defining a generic SQLAlchemy model,
+    # inheriting from it, and then creating DTOs for both
+    # the generic base and the concrete inherited model,
+    # asserting correct type resolution.
     assert True
