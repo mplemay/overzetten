@@ -1,0 +1,58 @@
+"""Tests for handling nullable fields in DTO generation."""
+
+from pydantic import EmailStr
+
+from overzetten import DTO, DTOConfig
+from overzetten.__tests__.fixtures.models import NullableTestModel, ServerNullableTestModel
+
+
+def test_server_side_nullable_handling() -> None:
+    """Test handling of server-side nullable fields."""
+
+    class ServerNullableDTO(DTO[ServerNullableTestModel]):
+        pass
+
+    fields = ServerNullableDTO.model_fields
+
+    # Field is nullable in DB and has server_default, should be Optional[str] with default None
+    assert fields["server_nullable_field"].annotation == str | None
+    assert fields["server_nullable_field"].default is None
+
+    # Field is not nullable in DB but has server_default, should be str with default None
+    assert fields["server_not_nullable_field"].annotation is str
+    assert fields["server_not_nullable_field"].default is None
+
+
+def test_nullable_field_handling() -> None:
+    """Test that nullable fields become Optional[T] correctly."""
+
+    class NullableTestDTO(DTO[NullableTestModel]):
+        pass
+
+    fields = NullableTestDTO.model_fields
+
+    assert fields["required_field"].annotation is str
+    assert fields["nullable_field"].annotation == str | None
+    assert fields["already_optional_field"].annotation == int | None
+
+
+def test_no_double_optional_wrapping() -> None:
+    """Test that Optional[T] fields aren't double-wrapped."""
+
+    class NullableTestDTO(DTO[NullableTestModel]):
+        pass
+
+    fields = NullableTestDTO.model_fields
+    # The type should be Optional[int], not Optional[Optional[int]]
+    assert fields["already_optional_field"].annotation == int | None
+    assert fields["already_optional_field"].annotation == int | None
+
+
+def test_nullable_field_with_custom_type_mapping() -> None:
+    """Test nullable fields with custom type mappings (nullable + EmailStr -> Optional[EmailStr])."""
+
+    class NullableEmailDTO(DTO[NullableTestModel]):
+        config = DTOConfig(mapped={NullableTestModel.nullable_email: EmailStr})
+
+    fields = NullableEmailDTO.model_fields
+    assert fields["nullable_email"].annotation == EmailStr | None

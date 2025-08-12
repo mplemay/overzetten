@@ -18,11 +18,33 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "fastapi>=0.116.1",
+    "httpx>=0.28.1",
     "pre-commit>=4.2.0",
+    "pydantic[email]>=2.11.7",
     "pytest>=8.4.1",
     "ruff>=0.12.8",
     "ty>=0.0.1a17",
+    "uvicorn>=0.35.0",
 ]
+
+[tool.uv_build]
+exclude = ["src/overzetten/__tests__"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+include = ["pyproject.toml"]
+
+[tool.ruff.format]
+docstring-code-format = true
+quote-style = "double"
+
+[tool.ruff.lint]
+select = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/overzetten/__tests__/**/*" = ["S101", "PLR2004", "INP001", "COM812"]
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "double"
@@ -33,7 +55,3 @@ combine-as-imports = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
-
-[tool.ruff.format]
-docstring-code-format = true
-quote-style = "double"
