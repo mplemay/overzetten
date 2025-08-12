@@ -1,3 +1,7 @@
+"""Tests for Pydantic ConfigDict options in DTO generation."""
+
+from typing import Self
+
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
@@ -5,7 +9,7 @@ from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import MyEnum, User
 
 
-def test_config_dict_options():
+def test_config_dict_options() -> None:
     """Test various ConfigDict options."""
 
     class UserConfigDTO(DTO[User]):
@@ -32,9 +36,9 @@ def test_config_dict_options():
         balance=100.0,
         rating=4.5,
     )
-    assert user_instance.name == "Test User"
+    assert user_instance.name == "Test User"  # type: ignore[unresolved-attribute]
     user_instance.name = "  New Name  "
-    assert user_instance.name == "New Name"
+    assert user_instance.name == "New Name"  # type: ignore[unresolved-attribute]
 
     # Test populate_by_name (requires a field alias)
     class UserAliasDTO(DTO[User]):
@@ -83,7 +87,7 @@ def test_config_dict_options():
     assert TempEnumModel(value=MyEnum.ONE).value == "one"
 
 
-def test_custom_serialization():
+def test_custom_serialization() -> None:
     """Test custom serialization using model_serializer."""
 
     class UserSerializeDTO(DTO[User]):
@@ -115,7 +119,7 @@ def test_custom_serialization():
     assert UserSchemaExtraDTO.model_json_schema()["example"] == {"id": 1, "name": "Test"}
 
 
-def test_custom_validation():
+def test_custom_validation() -> None:
     """Test custom validation using field_validator and model_validator."""
 
     class BaseUserValidationModel(BaseModel):
@@ -126,15 +130,17 @@ def test_custom_validation():
         # These validators will be inherited by the DTO
         @field_validator("age")
         @classmethod
-        def validate_age(cls, v):
+        def validate_age(cls, v: object) -> object:
+            error_message = "Age cannot be negative"
             if v < 0:
-                raise ValueError("Age cannot be negative")
+                raise ValueError(error_message)
             return v
 
         @model_validator(mode="after")
-        def validate_name_and_fullname(self):
+        def validate_name_and_fullname(self) -> Self:
+            error_message = "Name and fullname cannot be identical"
             if self.name and self.fullname and self.name == self.fullname:
-                raise ValueError("Name and fullname cannot be identical")
+                raise ValueError(error_message)
             return self
 
     class UserValidateDTO(DTO[User]):
@@ -186,7 +192,7 @@ def test_custom_validation():
         )
 
 
-def test_json_schema_generation_options():
+def test_json_schema_generation_options() -> None:
     """Test JSON schema generation options."""
 
     class UserSchemaOptionsDTO(DTO[User]):
@@ -202,7 +208,7 @@ def test_json_schema_generation_options():
     assert schema["description"] == "A user object"
 
 
-def test_performance_settings():
+def test_performance_settings() -> None:
     """Test performance settings like validate_default."""
     # validate_default is a Pydantic v1 setting, not directly in v2 ConfigDict
     # In Pydantic v2, validation of defaults happens by default.
@@ -226,4 +232,4 @@ def test_performance_settings():
         balance=100.0,
         rating=4.5,
     )
-    assert user_instance.name == "Test"
+    assert user_instance.name == "Test"  # type: ignore[unresolved-attribute]
