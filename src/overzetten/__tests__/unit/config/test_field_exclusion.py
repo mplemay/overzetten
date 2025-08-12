@@ -1,3 +1,5 @@
+"""Tests for field exclusion in DTO generation."""
+
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import (
     Address,
@@ -6,7 +8,7 @@ from overzetten.__tests__.fixtures.models import (
 )
 
 
-def test_field_exclusion():
+def test_field_exclusion() -> None:
     """Test excluding various field types."""
 
     class UserExcludedDTO(DTO[User]):
@@ -20,7 +22,7 @@ def test_field_exclusion():
     assert "age" in fields
 
 
-def test_exclude_all_fields_except_one():
+def test_exclude_all_fields_except_one() -> None:
     """Test excluding all fields except one (edge case)."""
 
     class UserMinimalDTO(DTO[User]):
@@ -49,7 +51,7 @@ def test_exclude_all_fields_except_one():
     assert list(fields.keys()) == ["name"]
 
 
-def test_exclude_overrides_mapped():
+def test_exclude_overrides_mapped() -> None:
     """Test that exclude takes precedence over mapped."""
 
     class ExcludeMappedDTO(DTO[User]):
@@ -62,7 +64,7 @@ def test_exclude_overrides_mapped():
     assert "name" not in fields
 
 
-def test_exclude_inherited_field():
+def test_exclude_inherited_field() -> None:
     """Test excluding a field inherited from a parent model."""
 
     class ChildMappedExcludedDTO(DTO[ChildMappedModel]):
@@ -75,7 +77,7 @@ def test_exclude_inherited_field():
     assert "common_field" in fields
 
 
-def test_exclude_foreign_key_field():
+def test_exclude_foreign_key_field() -> None:
     """Test excluding a foreign key field."""
 
     class AddressExcludedDTO(DTO[Address]):
@@ -88,7 +90,7 @@ def test_exclude_foreign_key_field():
     assert "email_address" in fields
 
 
-def test_exclude_hybrid_property():
+def test_exclude_hybrid_property() -> None:
     """Test excluding a hybrid property."""
 
     class UserHybridExcludedDTO(DTO[User]):
