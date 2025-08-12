@@ -1,3 +1,5 @@
+"""Tests for DTO generation with deep inheritance."""
+
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import DeclarativeBase
 
@@ -5,10 +7,11 @@ from overzetten import DTO
 
 
 class Base(DeclarativeBase):
-    pass
+    """Base class for SQLAlchemy declarative models in tests."""
 
 
-def create_deep_inheritance_model(depth):
+def create_deep_inheritance_model(depth: int) -> type[DeclarativeBase]:
+    """Dynamically creates a chain of deeply inherited SQLAlchemy models."""
     # Create a chain of inherited models
     current_base = Base
     for i in range(depth):
@@ -25,12 +28,12 @@ def create_deep_inheritance_model(depth):
     return current_base
 
 
-def test_deep_inheritance_dto_creation():
+def test_deep_inheritance_dto_creation() -> None:
     """Test DTO creation for a SQLAlchemy model with deep inheritance."""
     depth = 10
-    DeepestModel = create_deep_inheritance_model(depth)
+    deepest_model = create_deep_inheritance_model(depth)
 
-    class DeepestModelDTO(DTO[DeepestModel]):
+    class DeepestModelDTO(DTO[deepest_model]):
         pass
 
     fields = DeepestModelDTO.model_fields
