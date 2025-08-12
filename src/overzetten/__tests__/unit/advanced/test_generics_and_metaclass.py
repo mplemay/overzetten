@@ -44,11 +44,9 @@ def test_multiple_type_parameters_future_expansion() -> None:
     assert True
 
 
-def test_generic_type_resolution_with_inheritance() -> None:
-    """Test generic type resolution with inheritance."""
+def test_type_variable_constraints() -> None:
+    """Test type variable constraints."""
     # This test is a placeholder for future expansion.
-    # It would involve defining a generic SQLAlchemy model,
-    # inheriting from it, and then creating DTOs for both
-    # the generic base and the concrete inherited model,
-    # asserting correct type resolution.
+    # It would involve defining a SQLAlchemy model with a constrained TypeVar,
+    # and asserting that the DTO correctly reflects this constraint.
     assert True
