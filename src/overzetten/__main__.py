@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import (
     Annotated,
     Any,
+    ClassVar,
     Generic,
     TypeVar,
     Union,
@@ -61,10 +62,10 @@ class DTOConfig:
 class DTOMeta(type):
     """Metaclass for DTO classes that handles the generic type resolution."""
 
-    _dto_cache: dict[type[DeclarativeBase], type[BaseModel]] = {}
+    _dto_cache: ClassVar[dict[type[DeclarativeBase], type[BaseModel]]] = {}
 
     def __new__(
-        mcs: type[type],
+        cls: type[type],  # Renamed mcs to cls
         name: str,
         bases: tuple[type, ...],
         namespace: dict[str, Any],
@@ -94,11 +95,17 @@ class DTOMeta(type):
 
         # If this is a concrete DTO, create it as a Pydantic model
         if is_concrete_dto and sqlalchemy_model is not None:
+            _config = namespace.get("config")
+            config: DTOConfig = _config if isinstance(_config, DTOConfig) else DTOConfig()
+
             # Generate model name
-            model_name = config.model_name or mcs._generate_model_name(sqlalchemy_model, config)
+            model_name = config.model_name or DTOMeta._generate_model_name(
+                sqlalchemy_model,
+                config,
+            )
 
             # Use our mapper to create the Pydantic model
-            pydantic_model = mcs._create_pydantic_model(
+            pydantic_model = DTOMeta._create_pydantic_model(
                 sqlalchemy_model,
                 config,
                 namespace.get("__doc__"),
@@ -109,34 +116,36 @@ class DTOMeta(type):
             # but give it the name that was requested
             pydantic_model.__name__ = model_name
             pydantic_model.__qualname__ = model_name
-            pydantic_model.__module__ = namespace.get("__module__")
+            module_name = namespace.get("__module__")
+            if module_name is not None:
+                pydantic_model.__module__ = module_name
 
             return pydantic_model
         # This is the base DTO class - create it normally
-        return super().__new__(mcs, name, bases, namespace)
+        return super().__new__(cls, name, bases, namespace)  # type: ignore[invalid-super-argument]
 
     @classmethod
-    def _get_or_create_dto_for_model(
-        mcs: type[type],
+    def _get_or_create_dto_for_model(  # Renamed mcs to cls
+        cls: type[type],
         sqlalchemy_model: type[DeclarativeBase],
         config: DTOConfig,
         doc: str | None = None,
         processing: set[type[DeclarativeBase]] | None = None,
     ) -> type[BaseModel] | str:
         """Get a DTO from cache or create it, handling circular references."""
-        if sqlalchemy_model in mcs._dto_cache:
-            return mcs._dto_cache[sqlalchemy_model]
+        if sqlalchemy_model in cls._dto_cache:  # type: ignore[unresolved-attribute]
+            return cls._dto_cache[sqlalchemy_model]  # type: ignore[unresolved-attribute]
 
         if processing and sqlalchemy_model in processing:
             # Circular reference detected, return forward reference
-            return mcs._generate_model_name(sqlalchemy_model, config)
+            return cls._generate_model_name(sqlalchemy_model, config)  # type: ignore[unresolved-attribute]
 
         # Add to processing set
         current_processing = (processing or set()) | {sqlalchemy_model}
 
         # Create the DTO
-        dto = mcs._create_pydantic_model(sqlalchemy_model, config, doc, current_processing)
-        mcs._dto_cache[sqlalchemy_model] = dto
+        dto = cls._create_pydantic_model(sqlalchemy_model, config, doc, current_processing)  # type: ignore[unresolved-attribute]
+        cls._dto_cache[sqlalchemy_model] = dto  # type: ignore[unresolved-attribute]
         return dto
 
     @staticmethod
@@ -171,7 +180,7 @@ class DTOMeta(type):
     @staticmethod
     def _process_columns(
         sqlalchemy_model: type[DeclarativeBase],
-        inspector: inspect,
+        inspector: Any,  # Changed inspect to Any, # noqa: ANN401
         config: DTOConfig,
         fields: dict[str, Any],
     ) -> None:
@@ -194,7 +203,7 @@ class DTOMeta(type):
     @staticmethod
     def _process_column_properties(
         sqlalchemy_model: type[DeclarativeBase],
-        inspector: inspect,
+        inspector: Any,  # Changed inspect to Any, # noqa: ANN401
         config: DTOConfig,
         fields: dict[str, Any],
     ) -> None:
@@ -220,7 +229,7 @@ class DTOMeta(type):
     @staticmethod
     def _process_synonyms(
         sqlalchemy_model: type[DeclarativeBase],
-        inspector: inspect,
+        inspector: Any,  # Changed inspect to Any, # noqa: ANN401
         config: DTOConfig,
         fields: dict[str, Any],
     ) -> None:
@@ -241,7 +250,7 @@ class DTOMeta(type):
     @staticmethod
     def _process_relationships(
         sqlalchemy_model: type[DeclarativeBase],
-        inspector: inspect,
+        inspector: Any,  # Changed inspect to Any, # noqa: ANN401
         config: DTOConfig,
         fields: dict[str, Any],
         processing: set[type[DeclarativeBase]] | None = None,
@@ -303,7 +312,7 @@ class DTOMeta(type):
     @staticmethod
     def _get_mapped_field_type(
         mapped_value: Any,  # noqa: ANN401
-        obj: Any,
+        obj: Any,  # noqa: ANN401
     ) -> type:
         """Determine the field type when a custom mapping is provided."""
         if isinstance(mapped_value, FieldInfo):
@@ -335,7 +344,7 @@ class DTOMeta(type):
         return None
 
     @staticmethod
-    def _get_sqlalchemy_default(obj: Any) -> Any:  # noqa: ANN401
+    def _get_sqlalchemy_default(obj: Any) -> Any:  # noqa: ANN401, PLR0911
         """Get the default value from SQLAlchemy column or server default."""
         if hasattr(obj, "primary_key") and obj.primary_key and hasattr(obj, "autoincrement") and obj.autoincrement:
             return Field(default=None)  # Pydantic default is None for autoincrementing PKs
@@ -359,7 +368,7 @@ class DTOMeta(type):
         return None
 
     @staticmethod
-    def _get_final_default(attr: InstrumentedAttribute, obj: Any) -> Any:  # noqa: ANN401
+    def _get_final_default(attr: InstrumentedAttribute, _obj: Any) -> Any:  # noqa: ANN401
         """Determine the final default value based on relationship or column property."""
         if isinstance(attr.property, RelationshipProperty):
             # This is a relationship, which is typically optional
@@ -383,15 +392,76 @@ class DTOMeta(type):
         return True
 
     @staticmethod
+    def _get_relationship_field_type(
+        attr: InstrumentedAttribute,
+        config: DTOConfig,
+        processing: set[type[DeclarativeBase]] | None = None,
+    ) -> type | str:
+        related_model = attr.property.mapper.class_
+        related_dto_config = DTOConfig(model_name_suffix=config.model_name_suffix)
+        related_dto = DTOMeta._get_or_create_dto_for_model(
+            related_model,
+            related_dto_config,
+            processing=processing,
+        )
+        return list[related_dto] if attr.property.uselist else related_dto  # type: ignore[misc]
+
+    @staticmethod
+    def _get_annotated_field_type(
+        sqlalchemy_model: type[DeclarativeBase],
+        attr: InstrumentedAttribute,
+        obj: Any,  # noqa: ANN401
+    ) -> type | str | None:
+        if hasattr(sqlalchemy_model, "__annotations__") and attr.key in sqlalchemy_model.__annotations__:
+            mapped_annotation = sqlalchemy_model.__annotations__[attr.key]
+            if get_origin(mapped_annotation) is Mapped:
+                mapped_args = get_args(mapped_annotation)
+                if mapped_args:
+                    return mapped_args[0]
+                if hasattr(obj, "type"):
+                    return obj.type.python_type
+            else:
+                return mapped_annotation
+        return None
+
+    @staticmethod
+    def _get_obj_type(obj: Any) -> type | None:  # noqa: ANN401
+        if hasattr(obj, "type"):
+            return obj.type.python_type
+        return None
+
+    @staticmethod
+    def _infer_field_type(
+        sqlalchemy_model: type[DeclarativeBase],
+        attr: InstrumentedAttribute,
+        obj: Any,  # Renamed from 'column' to 'obj' to be more generic  # noqa: ANN401
+        config: DTOConfig,
+        processing: set[type[DeclarativeBase]] | None = None,
+    ) -> type | str:  # Changed return type to type | str
+        """Infer the Pydantic field type based on SQLAlchemy model properties."""
+        if isinstance(attr.property, RelationshipProperty):
+            return DTOMeta._get_relationship_field_type(attr, config, processing)
+
+        annotated_type = DTOMeta._get_annotated_field_type(sqlalchemy_model, attr, obj)
+        if annotated_type is not None:
+            return annotated_type
+
+        obj_type = DTOMeta._get_obj_type(obj)
+        if obj_type is not None:
+            return obj_type
+
+        return Any  # Default if no specific type is inferred
+
+    @staticmethod
     def _get_field_type(
         sqlalchemy_model: type[DeclarativeBase],
         attr: InstrumentedAttribute,
         obj: Any,  # Renamed from 'column' to 'obj' to be more generic  # noqa: ANN401
         config: DTOConfig,
         processing: set[type[DeclarativeBase]] | None = None,
-    ) -> type:
+    ) -> type | str:  # Changed return type to type | str
         """Get the Pydantic field type for a SQLAlchemy column or column_property."""
-        field_type = Any  # Default type
+        field_type: type | str = Any  # Default type # Added type annotation for field_type
         mapped_type_is_set = False
 
         # 1. Check for an explicit mapping in the DTOConfig.
@@ -405,36 +475,14 @@ class DTOMeta(type):
 
         # 2. If not mapped, or if the mapping didn't set a type, infer the type.
         if not mapped_type_is_set:
-            if isinstance(attr.property, RelationshipProperty):
-                related_model = attr.property.mapper.class_
-                related_dto_config = DTOConfig(model_name_suffix=config.model_name_suffix)
-                related_dto = DTOMeta._get_or_create_dto_for_model(
-                    related_model,
-                    related_dto_config,
-                    processing=processing,
-                )
-                field_type = list[related_dto] if attr.property.uselist else related_dto  # type: ignore
-
-            elif hasattr(sqlalchemy_model, "__annotations__") and attr.key in sqlalchemy_model.__annotations__:
-                mapped_annotation = sqlalchemy_model.__annotations__[attr.key]
-                if get_origin(mapped_annotation) is Mapped:
-                    mapped_args = get_args(mapped_annotation)
-                    if mapped_args:
-                        field_type = mapped_args[0]
-                    elif hasattr(obj, "type"):
-                        field_type = obj.type.python_type
-                else:
-                    field_type = mapped_annotation
-
-            elif hasattr(obj, "type"):
-                field_type = obj.type.python_type
+            field_type = DTOMeta._infer_field_type(sqlalchemy_model, attr, obj, config, processing)
 
         # 3. Finally, apply nullability based on the SQLAlchemy column's properties.
         is_nullable = (hasattr(obj, "nullable") and obj.nullable) or (
             isinstance(attr.property, RelationshipProperty) and not attr.property.uselist
         )
         if is_nullable and not DTOMeta._is_optional_type(field_type):
-            field_type = field_type | None
+            field_type = field_type | None  # ty: ignore[unsupported-operator]
 
         return field_type
 
