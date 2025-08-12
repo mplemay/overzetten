@@ -34,3 +34,11 @@ def test_dto_model_syntax_variations() -> None:
 
     assert AddressDTO.__name__ == "AddressDTO"
     assert "id" in AddressDTO.model_fields
+
+
+def test_multiple_type_parameters_future_expansion() -> None:
+    """Test multiple type parameters (future expansion)."""
+    # This test is a placeholder for future expansion.
+    # It would involve defining DTOs with multiple generic type parameters
+    # and asserting their correct resolution.
+    assert True
