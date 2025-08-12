@@ -1,8 +1,10 @@
+"""Tests for load testing DTO generation."""
+
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import User
 
 
-def test_load_testing_dto_creation():
+def test_load_testing_dto_creation() -> None:
     """Test generating a large number of DTOs rapidly."""
     num_dtos = 1000
     dtos = []
@@ -15,8 +17,8 @@ def test_load_testing_dto_creation():
 
     assert len(dtos) == num_dtos
     # Basic check to ensure DTOs are functional
-    for i, DTOClass in enumerate(dtos):
-        instance = DTOClass(
+    for i, dto_class in enumerate(dtos):
+        instance = dto_class(
             id=i,
             name=f"User_{i}",
             age=25,
