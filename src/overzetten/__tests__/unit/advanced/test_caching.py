@@ -1,3 +1,5 @@
+"""Tests for DTO caching mechanisms."""
+
 import pytest
 
 from overzetten import DTO, DTOConfig
@@ -9,16 +11,16 @@ from overzetten.__tests__.fixtures.models import User
 
 
 @pytest.fixture(autouse=True)
-def clear_dto_cache():
+def clear_dto_cache() -> None:
+    """Fixture to clear the DTO cache before each test."""
     # This fixture will run before each test in this file
     # and clear the internal DTO cache if it exists.
     # This is a placeholder; actual cache clearing depends on implementation.
     # For now, we'll assume the DTO creation process itself doesn't rely on a global mutable cache
     # that needs explicit clearing for these tests.
-    pass
 
 
-def test_cache_key_generation_uniqueness():
+def test_cache_key_generation_uniqueness() -> None:
     """Test that different DTOConfigs generate unique cache keys."""
 
     class UserDTO1(DTO[User]):
@@ -38,7 +40,7 @@ def test_cache_key_generation_uniqueness():
     assert UserDTO2 is not UserDTO3
 
 
-def test_cache_invalidation_scenarios():
+def test_cache_invalidation_scenarios() -> None:
     """Test cache invalidation scenarios (e.g., changing DTOConfig)."""
 
     class UserDTOVersion1(DTO[User]):
@@ -54,11 +56,11 @@ def test_cache_invalidation_scenarios():
         )  # Different exclude
 
     assert UserDTOVersion1 is not UserDTOVersion2
-    assert "id" not in UserDTOVersion1.model_fields
-    assert "name" not in UserDTOVersion2.model_fields
+    assert "id" not in UserDTOVersion1.model_fields  # type: ignore[unresolved-attribute]
+    assert "name" not in UserDTOVersion2.model_fields  # type: ignore[unresolved-attribute]
 
 
-def test_cache_size_limits_and_lru_behavior():
+def test_cache_size_limits_and_lru_behavior() -> None:
     """Test cache size limits and LRU behavior (conceptual)."""
     # This test is highly dependent on the actual cache implementation.
     # If overzetten uses an LRU cache (e.g., functools.lru_cache),
@@ -67,20 +69,20 @@ def test_cache_size_limits_and_lru_behavior():
     # For now, this is a placeholder as overzetten's current cache is implicit.
 
 
-def test_thread_safety_of_cache():
+def test_thread_safety_of_cache() -> None:
     """Test thread safety of the DTO cache (conceptual)."""
     # This would involve creating DTOs concurrently from multiple threads
     # and asserting consistency and lack of race conditions.
     # Requires a more complex setup with threading/multiprocessing.
 
 
-def test_cache_memory_leaks_with_many_models():
+def test_cache_memory_leaks_with_many_models() -> None:
     """Test for memory leaks when generating many DTOs (conceptual)."""
     # This would involve generating a large number of unique DTOs
     # and monitoring memory usage, potentially using memory profiling tools.
 
 
-def test_cache_behavior_with_dynamic_imports():
+def test_cache_behavior_with_dynamic_imports() -> None:
     """Test cache behavior when models/DTOs are dynamically imported (conceptual)."""
     # This would involve simulating dynamic imports and checking if the cache
     # correctly handles models loaded at different times/from different modules.
