@@ -1,6 +1,10 @@
+"""Test FastAPI integration with DTO generation."""
+
+from typing import Annotated
+
 from fastapi import APIRouter, FastAPI, Query
 from fastapi.testclient import TestClient
-from pydantic import Field
+from pydantic import EmailStr, Field
 
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import Address, User
@@ -8,11 +12,15 @@ from overzetten.__tests__.fixtures.models import Address, User
 
 # Define DTOs for User and Address
 class AddressDTO(DTO[Address]):
+    """DTO for Address model."""
+
     config = DTOConfig(exclude={Address.user}, model_name="AddressDTO")  # Exclude user to prevent circular reference
 
 
 class UserCreateDTO(DTO[User]):
     """DTO for creating a new user."""
+
+    email: EmailStr
 
     config = DTOConfig(
         exclude={User.id, User.created_at, User.addresses},
@@ -22,6 +30,8 @@ class UserCreateDTO(DTO[User]):
 
 
 class UserResponseDTO(DTO[User]):
+    """DTO for User response model."""
+
     config = DTOConfig(
         include_relationships=True,
         mapped={User.addresses: list[AddressDTO]},
@@ -30,6 +40,8 @@ class UserResponseDTO(DTO[User]):
 
 
 class UserSimpleResponseDTO(DTO[User]):
+    """DTO for simple User response model."""
+
     config = DTOConfig(include={User.id, User.name, User.age}, model_name="UserSimpleResponseDTO")
 
 
@@ -39,21 +51,23 @@ router = APIRouter()
 
 
 @router.post("/users/", response_model=UserResponseDTO)
-async def create_user(user: UserCreateDTO):
+async def create_user(user: UserCreateDTO) -> None:
+    """Create a new user."""
     # In a real application, you would save the user to the database
     # For testing, we'll simulate a created user with an ID and created_at
-    created_user_data = user.model_dump()
+    created_user_data = user.model_dump()  # ty: ignore[unresolved-attribute]
     created_user_data["id"] = 1  # Simulate DB assigned ID
     created_user_data["created_at"] = "2023-01-01T12:00:00"  # Simulate DB assigned timestamp
     created_user_data["addresses"] = []  # Simulate no addresses on creation
-    return UserResponseDTO(**created_user_data)
+    return created_user_data
 
 
-@router.get("/users/search", response_model=list[UserResponseDTO])
+@router.get("/users/search")
 async def search_users(
-    name: str | None = Query(None),
-    min_age: int | None = Query(None),
-):
+    name: Annotated[str | None, Query()] = None,
+    min_age: Annotated[int | None, Query()] = None,
+) -> list[UserResponseDTO]:
+    """Search for users based on query parameters."""
     # Simulate searching users based on query parameters
     users = []
     if name == user_response_dto.name and (min_age is None or min_age <= user_response_dto.age):
@@ -63,10 +77,11 @@ async def search_users(
 
 
 @router.get("/users/{user_id}", response_model=UserResponseDTO)
-async def get_user(user_id: int):
+async def get_user(user_id: int) -> User | None:
+    """Get a user by ID."""
     # Simulate fetching a user from the database
     if user_id == 1:
-        return UserResponseDTO(
+        return User(
             id=1,
             name="Test User",
             fullname="Test Fullname",
@@ -83,12 +98,12 @@ async def get_user(user_id: int):
             uuid_field=None,
             secret_field=None,
             json_field=None,
-            addresses=[AddressDTO(id=1, email_address="test@example.com", user_id=1)],
+            addresses=[Address(id=1, email_address="test@example.com", user_id=1)],
         )
     return None
 
 
-user_response_dto = UserResponseDTO(
+user_response_dto = User(
     id=1,
     name="Test User",
     fullname="Test Fullname",
@@ -105,14 +120,14 @@ user_response_dto = UserResponseDTO(
     uuid_field=None,
     secret_field=None,
     json_field=None,
-    addresses=[AddressDTO(id=1, email_address="test@example.com", user_id=1)],
+    addresses=[Address(id=1, email_address="test@example.com", user_id=1)],
 )
 
 app.include_router(router)
 client = TestClient(app)
 
 
-def test_fastapi_request_response_models():
+def test_fastapi_request_response_models() -> None:
     """Test DTOs as request bodies and response models in FastAPI."""
     # Test POST request with UserCreateDTO as request body
     response = client.post(
@@ -145,7 +160,7 @@ def test_fastapi_request_response_models():
     assert data["addresses"][0]["email_address"] == "test@example.com"
 
 
-def test_fastapi_validation_behavior():
+def test_fastapi_validation_behavior() -> None:
     """Test FastAPI validation errors with DTOs."""
     # Test missing required field
     response = client.post(
@@ -181,7 +196,7 @@ def test_fastapi_validation_behavior():
     assert "age" in response.json()["detail"][0]["loc"]
 
 
-def test_fastapi_path_query_parameters():
+def test_fastapi_path_query_parameters() -> None:
     """Test DTOs in path parameters and query parameters."""
     # Path parameter is directly handled by FastAPI, no DTO conversion needed there.
     # Query parameters are handled by Pydantic, so we test that.
@@ -204,7 +219,7 @@ def test_fastapi_path_query_parameters():
     assert "min_age" in response.json()["detail"][0]["loc"]
 
 
-def test_fastapi_openapi_schema_generation():
+def test_fastapi_openapi_schema_generation() -> None:
     """Test OpenAPI schema generation correctness."""
     response = client.get("/openapi.json")
     assert response.status_code == 200
