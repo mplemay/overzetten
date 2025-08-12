@@ -1,3 +1,5 @@
+"""Tests for default values and required fields in DTO generation."""
+
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import (
     AdvancedDefaultTestModel,
@@ -6,7 +8,7 @@ from overzetten.__tests__.fixtures.models import (
 )
 
 
-def test_default_values_and_required_fields():
+def test_default_values_and_required_fields() -> None:
     """Test handling of SQLAlchemy defaults and required fields."""
 
     class DefaultValueTestDTO(DTO[DefaultValueTestModel]):
@@ -24,7 +26,7 @@ def test_default_values_and_required_fields():
     assert fields["required_field"].is_required()
 
 
-def test_custom_defaults():
+def test_custom_defaults() -> None:
     """Test setting custom defaults with field_defaults."""
 
     class CustomDefaultDTO(DTO[DefaultValueTestModel]):
@@ -44,7 +46,7 @@ def test_custom_defaults():
     assert fields["required_field"].default == "custom_default"
 
 
-def test_server_default():
+def test_server_default() -> None:
     """Test handling of server_default."""
 
     class ServerDefaultDTO(DTO[DefaultValueTestModel]):
@@ -58,7 +60,7 @@ def test_server_default():
     assert fields["server_default_field"].default is None
 
 
-def test_defaults_for_excluded_fields_ignored():
+def test_defaults_for_excluded_fields_ignored() -> None:
     """Test that field_defaults for excluded fields are ignored."""
 
     class UserExcludedWithDefaultDTO(DTO[User]):
@@ -73,7 +75,7 @@ def test_defaults_for_excluded_fields_ignored():
     assert "name" not in fields
 
 
-def test_advanced_sqlalchemy_defaults():
+def test_advanced_sqlalchemy_defaults() -> None:
     """Test handling of advanced SQLAlchemy defaults like init=False, autoincrement, insert_default, and sequence."""
 
     class AdvancedDefaultTestDTO(DTO[AdvancedDefaultTestModel]):
@@ -102,10 +104,10 @@ def test_advanced_sqlalchemy_defaults():
     assert fields["custom_type_default"].default == 5
 
 
-def test_custom_defaults_callable_vs_static():
+def test_custom_defaults_callable_vs_static() -> None:
     """Test setting custom defaults with callable vs static values in field_defaults."""
 
-    def callable_default_func():
+    def callable_default_func() -> str:
         return "dynamic_default"
 
     class CustomDefaultsCallableStaticDTO(DTO[DefaultValueTestModel]):
@@ -125,7 +127,7 @@ def test_custom_defaults_callable_vs_static():
     assert fields["required_field"].default == "static_custom_default"
 
 
-def test_custom_defaults_type_validation():
+def test_custom_defaults_type_validation() -> None:
     """Test that field_defaults respect Pydantic type validation."""
 
     class CustomDefaultsTypeValidationDTO(DTO[DefaultValueTestModel]):
