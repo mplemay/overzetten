@@ -1,3 +1,5 @@
+"""Tests for field inclusion in DTO generation."""
+
 from pydantic import EmailStr
 
 from overzetten import DTO, DTOConfig
@@ -9,7 +11,7 @@ from overzetten.__tests__.fixtures.models import (
 )
 
 
-def test_field_inclusion():
+def test_field_inclusion() -> None:
     """Test including only a specific subset of fields."""
 
     class UserIncludedDTO(DTO[User]):
@@ -21,7 +23,7 @@ def test_field_inclusion():
     assert "is_active" not in fields
 
 
-def test_exclude_overrides_include():
+def test_exclude_overrides_include() -> None:
     """Test that exclude takes precedence over include."""
 
     class UserIncludeExcludeDTO(DTO[User]):
@@ -36,7 +38,7 @@ def test_exclude_overrides_include():
     assert "age" not in fields
 
 
-def test_empty_include_set():
+def test_empty_include_set() -> None:
     """Test that an empty include set results in no fields."""
 
     class UserEmptyIncludeDTO(DTO[User]):
@@ -46,7 +48,7 @@ def test_empty_include_set():
     assert list(fields.keys()) == []
 
 
-def test_include_with_mapped():
+def test_include_with_mapped() -> None:
     """Test combining include and mapped configurations."""
 
     class UserIncludeMappedDTO(DTO[User]):
@@ -61,7 +63,7 @@ def test_include_with_mapped():
     assert fields["age"].annotation is int
 
 
-def test_include_relationships_vs_columns():
+def test_include_relationships_vs_columns() -> None:
     """Test including relationships vs columns."""
 
     class AddressDTO(DTO[Address]):
@@ -80,7 +82,7 @@ def test_include_relationships_vs_columns():
     assert fields["addresses"].annotation == list[AddressDTO]
 
 
-def test_include_inherited_fields_selectively():
+def test_include_inherited_fields_selectively() -> None:
     """Test including inherited fields selectively."""
 
     class ChildMappedIncludedDTO(DTO[ChildMappedModel]):
