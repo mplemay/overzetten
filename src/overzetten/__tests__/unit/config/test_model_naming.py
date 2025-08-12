@@ -1,8 +1,10 @@
+"""Tests for DTO model naming conventions."""
+
 from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import Address, User
 
 
-def test_model_name_override():
+def test_model_name_override() -> None:
     """Test the model_name override."""
 
     class CustomNameDTO(DTO[User]):
@@ -12,7 +14,7 @@ def test_model_name_override():
     assert CustomNameDTO.__qualname__ == "MyCustomUserModel"
 
 
-def test_model_name_prefix_and_suffix():
+def test_model_name_prefix_and_suffix() -> None:
     """Test the model_name_prefix and model_name_suffix."""
 
     class PrefixedSuffixedDTO(DTO[User]):
@@ -22,7 +24,7 @@ def test_model_name_prefix_and_suffix():
     assert PrefixedSuffixedDTO.__qualname__ == "PrefixUserSuffix"
 
 
-def test_default_model_naming():
+def test_default_model_naming() -> None:
     """Test the default model naming pattern."""
 
     class UserDTO(DTO[User]):
@@ -32,7 +34,7 @@ def test_default_model_naming():
     assert UserDTO.__qualname__ == "UserDTO"
 
 
-def test_naming_does_not_affect_functionality():
+def test_naming_does_not_affect_functionality() -> None:
     """Test that naming doesn't affect the functionality of the DTO."""
 
     class MyDTO(DTO[User]):
@@ -61,7 +63,7 @@ def test_naming_does_not_affect_functionality():
     assert instance.name == "test"
 
 
-def test_name_conflicts():
+def test_name_conflicts() -> None:
     """Test that name conflicts are handled gracefully."""
 
     class UserDTO(DTO[User]):
@@ -75,7 +77,7 @@ def test_name_conflicts():
     assert UserDTO is not AddressDTO
 
 
-def test_very_long_model_name():
+def test_very_long_model_name() -> None:
     """Test that a very long model name can be used."""
     long_name = "a" * 1000
 
@@ -86,7 +88,7 @@ def test_very_long_model_name():
     assert LongNameDTO.__qualname__ == long_name
 
 
-def test_model_name_with_special_characters():
+def test_model_name_with_special_characters() -> None:
     """Test that a model name with special characters can be used."""
     special_name = "My_Special-Model.Name"
 
