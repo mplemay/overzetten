@@ -1,3 +1,5 @@
+"""Tests for inherited field mapping in DTO generation."""
+
 from pydantic import EmailStr
 
 from overzetten import DTO, DTOConfig
@@ -7,7 +9,7 @@ from overzetten.__tests__.fixtures.models import (
 )
 
 
-def test_mapping_with_inheritance():
+def test_mapping_with_inheritance() -> None:
     """Test that mapped configurations are correctly applied with inheritance."""
 
     class BaseMappedDTO(DTO[BaseMappedModel]):
