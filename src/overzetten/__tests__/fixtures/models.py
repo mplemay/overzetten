@@ -1,8 +1,10 @@
+"""SQLAlchemy models for testing DTO generation."""
+
 import datetime
 import enum
 import uuid
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 
 from sqlalchemy import (
     JSON,
@@ -35,18 +37,20 @@ from sqlalchemy.orm import (
 
 
 class Base(DeclarativeBase):
-    pass
+    """Define base class for SQLAlchemy declarative models."""
 
 
 class PostgresBase(DeclarativeBase):
-    pass
+    """Define base class for PostgreSQL-specific SQLAlchemy models."""
 
 
 class MySQLBase(DeclarativeBase):
-    pass
+    """Define base class for MySQL-specific SQLAlchemy models."""
 
 
 class User(Base):
+    """Represent a user in the database."""
+
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -68,17 +72,21 @@ class User(Base):
     addresses: Mapped[list["Address"]] = relationship(back_populates="user")
 
     @hybrid_property
-    def full_name(self):
+    def full_name(self) -> str:
+        """Return the full name of the user."""
         if self.fullname:
             return f"{self.name} {self.fullname}"
         return self.name
 
     @full_name.expression
-    def full_name(cls):
+    def full_name(cls) -> Any:  # noqa: N805, ANN401
+        """Provide SQL expression for the full name of the user."""
         return case((cls.fullname is not None, cls.name + " " + cls.fullname), else_=cls.name)
 
 
 class Address(Base):
+    """Represent an address in the database."""
+
     __tablename__ = "addresses"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -88,6 +96,8 @@ class Address(Base):
 
 
 class TypeConversionTestModel(Base):
+    """Define model for testing type conversions."""
+
     __tablename__ = "type_conversion_test"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -104,6 +114,8 @@ class TypeConversionTestModel(Base):
 
 
 class NullableTestModel(Base):
+    """Define model for testing nullable field handling."""
+
     __tablename__ = "nullable_test"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -114,6 +126,8 @@ class NullableTestModel(Base):
 
 
 class ServerNullableTestModel(Base):
+    """Define model for testing server-side nullable fields and defaults."""
+
     __tablename__ = "server_nullable_test"
     id: Mapped[int] = mapped_column(primary_key=True)
     # Nullable with a server default
@@ -127,6 +141,8 @@ class ServerNullableTestModel(Base):
 
 
 class DefaultValueTestModel(Base):
+    """Define model for testing various default value scenarios."""
+
     __tablename__ = "default_value_test"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -137,6 +153,8 @@ class DefaultValueTestModel(Base):
 
 
 class RequiredFieldTestModel(Base):
+    """Define model for testing required field logic."""
+
     __tablename__ = "required_field_test_model"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     # Not nullable, no default = required
@@ -160,6 +178,8 @@ class RequiredFieldTestModel(Base):
 
 
 class Node(Base):
+    """Define SQLAlchemy Node model for self-referential relationships."""
+
     __tablename__ = "nodes"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
@@ -170,6 +190,8 @@ class Node(Base):
 
 
 class BaseMappedModel(Base):
+    """Define base model for testing inheritance and field mapping."""
+
     __tablename__ = "base_mapped_model"
     id: Mapped[int] = mapped_column(primary_key=True)
     base_field: Mapped[str]
@@ -177,18 +199,23 @@ class BaseMappedModel(Base):
 
 
 class ChildMappedModel(BaseMappedModel):
+    """Define child model for testing inheritance and field mapping."""
+
     __tablename__ = "child_mapped_model"
     id: Mapped[int] = mapped_column(ForeignKey("base_mapped_model.id"), primary_key=True)
     child_field: Mapped[str]
-    common_field: Mapped[str]
 
 
 class TimestampMixin:
+    """Provide mixin for created_at and updated_at timestamps."""
+
     created_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now)
     updated_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
 
 class Product(TimestampMixin, Base):
+    """Represent a product in the database."""
+
     __tablename__ = "products"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
@@ -196,29 +223,37 @@ class Product(TimestampMixin, Base):
 
 
 class AbstractBaseModel(Base):
+    """Define abstract base model for inheritance testing."""
+
     __abstract__ = True
     id: Mapped[int] = mapped_column(primary_key=True)
     abstract_field: Mapped[str]
 
 
 class ConcreteModel(AbstractBaseModel):
+    """Define concrete model inheriting from AbstractBaseModel."""
+
     __tablename__ = "concrete_model"
     concrete_field: Mapped[str]
 
 
 class Employee(Base):
+    """Define base class for polymorphic Employee models."""
+
     __tablename__ = "employee"
     id: Mapped[int] = mapped_column(primary_key=True)
     type: Mapped[str]
 
-    __mapper_args__ = {
+    __mapper_args__: ClassVar[dict] = {
         "polymorphic_on": "type",
         "polymorphic_identity": "employee",
     }
 
 
 class Manager(Employee):
-    __mapper_args__ = {
+    """Define manager model in polymorphic inheritance."""
+
+    __mapper_args__: ClassVar[dict] = {
         "polymorphic_identity": "manager",
     }
 
@@ -226,7 +261,9 @@ class Manager(Employee):
 
 
 class Engineer(Employee):
-    __mapper_args__ = {
+    """Define engineer model in polymorphic inheritance."""
+
+    __mapper_args__: ClassVar[dict] = {
         "polymorphic_identity": "engineer",
     }
 
@@ -235,38 +272,51 @@ class Engineer(Employee):
 
 # Custom Types (moved to appear before AdvancedDefaultTestModel)
 class CustomInt(TypeDecorator):
+    """Define custom SQLAlchemy Integer type that multiplies/divides by 10."""
+
     impl = Integer
     cache_ok = True
 
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value: Any, _dialect: Any) -> Any:  # noqa: ANN401
+        """Process value before binding to database."""
         return value * 10 if value is not None else None
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value: Any, _dialect: Any) -> Any:  # noqa: ANN401
+        """Process value after fetching from database."""
         return value // 10 if value is not None else None
 
     @property
-    def python_type(self):
+    def python_type(self) -> type:
+        """Return the Python type for this custom type."""
         return int
 
 
 class CustomTypeModel(Base):
+    """Define model using a custom SQLAlchemy type."""
+
     __tablename__ = "custom_type_test"
     id: Mapped[int] = mapped_column(primary_key=True)
     custom_field: Mapped[int] = mapped_column(CustomInt)
 
 
 class NoPythonType(TypeDecorator):
+    """Define custom SQLAlchemy type without a defined python_type."""
+
     impl = String
     cache_ok = True
 
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value: Any, _dialect: Any) -> Any:  # noqa: ANN401
+        """Process value before binding to database."""
         return value
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value: Any, _dialect: Any) -> Any:  # noqa: ANN401
+        """Process value after fetching from database."""
         return value
 
 
 class NoPythonTypeModel(Base):
+    """Define model using a custom SQLAlchemy type without a python_type."""
+
     __tablename__ = "no_python_type_test"
     id: Mapped[int] = mapped_column(primary_key=True)
     no_python_field: Mapped[Any] = mapped_column(NoPythonType)
@@ -274,6 +324,8 @@ class NoPythonTypeModel(Base):
 
 # AdvancedDefaultTestModel (now after CustomInt and CustomTypeModel)
 class AdvancedDefaultTestModel(MappedAsDataclass, Base):
+    """Define model for testing advanced default value scenarios."""
+
     __tablename__ = "advanced_default_test"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     # Field with init=False, should not appear in DTO constructor
@@ -287,14 +339,18 @@ class AdvancedDefaultTestModel(MappedAsDataclass, Base):
 
 
 class MappedAnnotationTestModel(Base):
+    """Define model for testing Mapped annotations vs raw type hints."""
+
     __tablename__ = "mapped_annotation_test"
     __allow_unmapped__ = True
     id: Mapped[int] = mapped_column(primary_key=True)
     mapped_str: Mapped[str]
-    raw_str: str = mapped_column(String)
+    raw_str: str = mapped_column(String)  # type: ignore[attr-defined]
 
 
 class GenericMappedTestModel(Base):
+    """Define model for testing generic types mapped to JSON columns."""
+
     __tablename__ = "generic_mapped_test"
     id: Mapped[int] = mapped_column(primary_key=True)
     list_of_strings: Mapped[list[str] | None] = mapped_column(JSON)
@@ -302,6 +358,8 @@ class GenericMappedTestModel(Base):
 
 
 class UnionLiteralTestModel(Base):
+    """Define model for testing union and literal types."""
+
     __tablename__ = "union_literal_test"
     id: Mapped[int] = mapped_column(primary_key=True)
     status: Mapped[str] = mapped_column(String)
@@ -309,6 +367,8 @@ class UnionLiteralTestModel(Base):
 
 
 class SQLiteSpecificTypesModel(Base):
+    """Define model for testing SQLite-specific type handling."""
+
     __tablename__ = "sqlite_types_model_test"
     id: Mapped[int] = mapped_column(primary_key=True)
     # SQLite stores booleans as INTEGER (0 or 1)
@@ -320,11 +380,15 @@ class SQLiteSpecificTypesModel(Base):
 
 
 class MyEnum(enum.Enum):
+    """Define example Enum for database type testing."""
+
     ONE = "one"
     TWO = "two"
 
 
 class PostgresSpecificTypesModel(PostgresBase):
+    """Define model for testing PostgreSQL-specific type handling."""
+
     __tablename__ = "postgres_specific_types"
     id: Mapped[int] = mapped_column(primary_key=True)
     uuid_field: Mapped[uuid.UUID] = mapped_column(postgresql.UUID(as_uuid=True))
@@ -334,11 +398,15 @@ class PostgresSpecificTypesModel(PostgresBase):
 
 
 class MySQLEnum(enum.Enum):
+    """Define example Enum for MySQL database type testing."""
+
     OPTION_A = "A"
     OPTION_B = "B"
 
 
 class MySQLSpecificTypesModel(MySQLBase):
+    """Define model for testing MySQL-specific type handling."""
+
     __tablename__ = "mysql_specific_types"
     id: Mapped[int] = mapped_column(primary_key=True)
     year_field: Mapped[int] = mapped_column(mysql.YEAR)
@@ -347,12 +415,16 @@ class MySQLSpecificTypesModel(MySQLBase):
 
 
 class ConcreteTableBase(Base):
+    """Define base model for concrete table inheritance."""
+
     __tablename__ = "concrete_table_base"
     id: Mapped[int] = mapped_column(primary_key=True)
     base_data: Mapped[str]
 
 
 class ConcreteTableChild(ConcreteTableBase):
+    """Define child model for concrete table inheritance."""
+
     __tablename__ = "concrete_table_child"
     id: Mapped[int] = mapped_column(ForeignKey("concrete_table_base.id"), primary_key=True)
     child_data: Mapped[str]
@@ -368,6 +440,8 @@ association_table = Table(
 
 
 class Left(Base):
+    """Define model for the left side of a many-to-many relationship."""
+
     __tablename__ = "left_table"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
@@ -375,6 +449,8 @@ class Left(Base):
 
 
 class Right(Base):
+    """Define model for the right side of a many-to-many relationship."""
+
     __tablename__ = "right_table"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
@@ -383,6 +459,8 @@ class Right(Base):
 
 # Many-to-Many Relationship (Association Object / Through Model)
 class ThroughModel(Base):
+    """Define association model for a many-to-many relationship with extra data."""
+
     __tablename__ = "through_table"
     left_id: Mapped[int] = mapped_column(ForeignKey("left_through_table.id"), primary_key=True)
     right_id: Mapped[int] = mapped_column(ForeignKey("right_through_table.id"), primary_key=True)
@@ -393,16 +471,28 @@ class ThroughModel(Base):
 
 
 class LeftThrough(Base):
+    """Define left model for a many-to-many relationship with an association object."""
+
     __tablename__ = "left_through_table"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    right_associations: Mapped[list["ThroughModel"]] = relationship(back_populates="left")
-    rights: Mapped[list["RightThrough"]] = relationship(secondary="through_table", back_populates="lefts")
+    right_associations: Mapped[list["ThroughModel"]] = relationship(back_populates="left", overlaps="rights")
+    rights: Mapped[list["RightThrough"]] = relationship(
+        secondary="through_table",
+        back_populates="lefts",
+        overlaps="left_associations,right,left",
+    )
 
 
 class RightThrough(Base):
+    """Define right model for a many-to-many relationship with an association object."""
+
     __tablename__ = "right_through_table"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    left_associations: Mapped[list["ThroughModel"]] = relationship(back_populates="right")
-    lefts: Mapped[list["LeftThrough"]] = relationship(secondary="through_table", back_populates="rights")
+    left_associations: Mapped[list["ThroughModel"]] = relationship(back_populates="right", overlaps="lefts")
+    lefts: Mapped[list["LeftThrough"]] = relationship(
+        secondary="through_table",
+        back_populates="rights",
+        overlaps="left_associations,right,left,right_associations",
+    )
