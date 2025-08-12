@@ -42,3 +42,11 @@ def test_multiple_type_parameters_future_expansion() -> None:
     # It would involve defining DTOs with multiple generic type parameters
     # and asserting their correct resolution.
     assert True
+
+
+def test_nested_generic_scenarios() -> None:
+    """Test nested generic scenarios."""
+    # This test is a placeholder for future expansion.
+    # It would involve defining SQLAlchemy models with Mapped[List[Mapped[Dict[str, int]]]]
+    # and asserting that the DTO correctly reflects this nested generic structure.
+    assert True
