@@ -1,3 +1,7 @@
+"""Tests for complex SQLAlchemy features in DTO generation."""
+
+from typing import ClassVar
+
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import column_property, synonym
 
@@ -6,6 +10,8 @@ from overzetten.__tests__.fixtures.models import Base, Employee, Engineer, Manag
 
 
 class SynonymModel(Base):
+    """Model for testing SQLAlchemy synonyms."""
+
     __tablename__ = "synonym_model"
 
     id = Column(Integer, primary_key=True)
@@ -14,7 +20,7 @@ class SynonymModel(Base):
     name = synonym("_name")
 
 
-def test_synonym_handling():
+def test_synonym_handling() -> None:
     """Test that synonyms are handled correctly."""
 
     class SynonymDTO(DTO[SynonymModel]):
@@ -27,6 +33,8 @@ def test_synonym_handling():
 
 
 class ColumnPropertyModel(Base):
+    """Model for testing SQLAlchemy column properties."""
+
     __tablename__ = "column_property_model"
 
     id = Column(Integer, primary_key=True)
@@ -36,7 +44,7 @@ class ColumnPropertyModel(Base):
     full_name = column_property(first_name + " " + last_name)
 
 
-def test_column_property_handling():
+def test_column_property_handling() -> None:
     """Test that column properties are handled correctly."""
 
     class ColumnPropertyDTO(DTO[ColumnPropertyModel]):
@@ -50,14 +58,16 @@ def test_column_property_handling():
 
 
 class MultiSchemaModel(Base):
+    """Model for testing SQLAlchemy models with explicit schemas."""
+
     __tablename__ = "multi_schema_model"
-    __table_args__ = {"schema": "test_schema"}
+    __table_args__: ClassVar = {"schema": "test_schema"}
 
     id = Column(Integer, primary_key=True)
     data = Column(String)
 
 
-def test_multi_schema_handling():
+def test_multi_schema_handling() -> None:
     """Test that models in different schemas are handled correctly."""
 
     class MultiSchemaDTO(DTO[MultiSchemaModel]):
@@ -68,7 +78,7 @@ def test_multi_schema_handling():
     assert "data" in fields
 
 
-def test_polymorphic_models():
+def test_polymorphic_models() -> None:
     """Test that polymorphic models are handled correctly."""
 
     class EmployeeDTO(DTO[Employee]):
