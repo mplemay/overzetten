@@ -1,6 +1,7 @@
+"""Tests for basic DTO creation and functionality."""
+
 import datetime
 from decimal import Decimal
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -8,7 +9,7 @@ from overzetten import DTO, DTOConfig
 from overzetten.__tests__.fixtures.models import User
 
 
-def test_basic_dto_creation():
+def test_basic_dto_creation() -> None:
     """Test creating a basic DTO with no configuration."""
 
     class UserDTO(DTO[User]):
@@ -42,7 +43,7 @@ def test_basic_dto_creation():
     # 3. Test that the field types are correct
     assert fields["id"].annotation is int
     assert fields["name"].annotation is str
-    assert fields["fullname"].annotation == Optional[str]
+    assert fields["fullname"].annotation == str | None
     assert fields["age"].annotation is int
     assert fields["is_active"].annotation is bool
     assert fields["created_at"].annotation is datetime.datetime
@@ -50,10 +51,10 @@ def test_basic_dto_creation():
     assert fields["last_login"].annotation is datetime.time
     assert fields["balance"].annotation is float
     assert fields["rating"].annotation is Decimal
-    assert fields["data"].annotation == Optional[bytes]
+    assert fields["data"].annotation == bytes | None
 
 
-def test_dto_naming_and_module():
+def test_dto_naming_and_module() -> None:
     """Test that __name__, __qualname__, and __module__ are set correctly."""
 
     class UserDTO(DTO[User]):
@@ -61,10 +62,11 @@ def test_dto_naming_and_module():
 
     assert UserDTO.__name__ == "UserDTO"
     assert UserDTO.__qualname__ == "UserDTO"
-    assert UserDTO.__module__ is not None and UserDTO.__module__ != "overzetten.__main__"
+    assert UserDTO.__module__ is not None
+    assert UserDTO.__module__ != "overzetten.__main__"
 
 
-def test_multiple_dtos_from_same_model():
+def test_multiple_dtos_from_same_model() -> None:
     """Test creating multiple DTOs from the same SQLAlchemy model with different configs."""
 
     class UserReadDTO(DTO[User]):
