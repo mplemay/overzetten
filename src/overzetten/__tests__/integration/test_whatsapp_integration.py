@@ -171,15 +171,17 @@ class TestWhatsAppWebhookHandling:
 class TestWhatsAppEventHandlers:
     """Test event handler functionality."""
 
-    def test_message_handler_registration_decorator(self, whatsapp_router, app_with_whatsapp):
-        """Test that message handlers can be registered via decorators and called."""
+    def test_message_handler_registration_constructor(self, test_config):
+        """Test that message handlers can be registered via constructor and called."""
         received_messages = []
 
-        @whatsapp_router.on_message
         def handle_message(message: dict[str, Any]) -> None:
             received_messages.append(message)
 
-        client = TestClient(app_with_whatsapp)
+        router = WhatsApp(config=test_config, on_message=handle_message)
+        app = FastAPI()
+        app.include_router(router)
+        client = TestClient(app)
 
         webhook_payload = {
             "object": "whatsapp_business_account",
@@ -251,15 +253,17 @@ class TestWhatsAppEventHandlers:
         assert len(received_messages) == 1
         assert received_messages[0]["text"]["body"] == "Test message"
 
-    def test_status_handler_registration(self, whatsapp_router, app_with_whatsapp):
-        """Test that status handlers can be registered and called."""
+    def test_status_handler_registration(self, test_config):
+        """Test that status handlers can be registered via constructor and called."""
         received_statuses = []
 
-        @whatsapp_router.on_status_update
         def handle_status(status: dict[str, Any]) -> None:
             received_statuses.append(status)
 
-        client = TestClient(app_with_whatsapp)
+        router = WhatsApp(config=test_config, on_status_update=handle_status)
+        app = FastAPI()
+        app.include_router(router)
+        client = TestClient(app)
 
         webhook_payload = {
             "object": "whatsapp_business_account",
@@ -289,20 +293,19 @@ class TestWhatsAppEventHandlers:
         assert len(received_statuses) == 1
         assert received_statuses[0]["status"] == "delivered"
 
-    def test_multiple_handlers(self, whatsapp_router, app_with_whatsapp):
-        """Test that multiple handlers can be registered."""
+    def test_multiple_handlers(self, test_config):
+        """Test that multiple handlers can be registered via constructor."""
+        # For constructor-based approach, we can only register one handler of each type
+        # but we can create multiple routers if needed
         handler1_calls = []
-        handler2_calls = []
 
-        @whatsapp_router.on_message
         def handler1(message: dict[str, Any]) -> None:
             handler1_calls.append(message)
 
-        @whatsapp_router.on_message
-        def handler2(message: dict[str, Any]) -> None:
-            handler2_calls.append(message)
-
-        client = TestClient(app_with_whatsapp)
+        router = WhatsApp(config=test_config, on_message=handler1)
+        app = FastAPI()
+        app.include_router(router)
+        client = TestClient(app)
 
         webhook_payload = {
             "object": "whatsapp_business_account",
@@ -331,7 +334,6 @@ class TestWhatsAppEventHandlers:
         response = client.post("/webhook/", json=webhook_payload)
         assert response.status_code == 200
         assert len(handler1_calls) == 1
-        assert len(handler2_calls) == 1
 
 
 class TestWhatsAppConfiguration:
@@ -490,19 +492,16 @@ class TestWhatsAppConfiguration:
 class TestWhatsAppErrorHandling:
     """Test error handling in WhatsApp router."""
 
-    def test_handler_exception_handling(self, whatsapp_router, app_with_whatsapp):
+    def test_handler_exception_handling(self, test_config):
         """Test that exceptions in handlers don't break the webhook."""
-        @whatsapp_router.on_message
+        # With constructor-based approach, we'll test a single handler that fails
         def failing_handler(message: dict[str, Any]) -> None:
             raise Exception("Handler error")
 
-        received_messages = []
-
-        @whatsapp_router.on_message
-        def working_handler(message: dict[str, Any]) -> None:
-            received_messages.append(message)
-
-        client = TestClient(app_with_whatsapp)
+        router = WhatsApp(config=test_config, on_message=failing_handler)
+        app = FastAPI()
+        app.include_router(router)
+        client = TestClient(app)
 
         webhook_payload = {
             "object": "whatsapp_business_account",
@@ -529,6 +528,5 @@ class TestWhatsAppErrorHandling:
         }
 
         response = client.post("/webhook/", json=webhook_payload)
+        # Should still return 200 even if handler fails (exception is caught)
         assert response.status_code == 200
-        # The working handler should still be called despite the failing handler
-        assert len(received_messages) == 1

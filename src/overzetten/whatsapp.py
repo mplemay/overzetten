@@ -120,30 +120,4 @@ class WhatsApp(APIRouter):
                     # In production, this should be logged properly
                     continue
 
-    def on_message(self, handler: Callable[[dict[str, Any]], None]) -> Callable[[dict[str, Any]], None]:
-        """
-        Register a message handler.
 
-        Args:
-            handler: Function to handle incoming messages
-
-        Returns
-        -------
-            The registered handler function
-        """
-        self._message_handlers.append(handler)
-        return handler
-
-    def on_status_update(self, handler: Callable[[dict[str, Any]], None]) -> Callable[[dict[str, Any]], None]:
-        """
-        Register a status update handler.
-
-        Args:
-            handler: Function to handle message status updates
-
-        Returns
-        -------
-            The registered handler function
-        """
-        self._status_handlers.append(handler)
-        return handler
