@@ -1,18 +1,31 @@
 """Test WhatsApp webhook router integration with FastAPI."""
 
+import os
 from typing import Any
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from overzetten import WhatsApp
+from overzetten.whatsapp import WhatsApp, WhatsAppConfig
 
 
 @pytest.fixture
-def whatsapp_router():
+def test_config():
+    """Create a test configuration."""
+    return WhatsAppConfig(
+        whatsapp_phone_id="test_phone",
+        whatsapp_token="test_token",
+        whatsapp_verify_token="test_verify_token",
+        whatsapp_app_id="test_app",
+        whatsapp_app_secret="test_secret"
+    )
+
+
+@pytest.fixture
+def whatsapp_router(test_config):
     """Create a WhatsApp router for testing."""
-    return WhatsApp(verify_token="test_verify_token")
+    return WhatsApp(config=test_config)
 
 
 @pytest.fixture
@@ -158,8 +171,8 @@ class TestWhatsAppWebhookHandling:
 class TestWhatsAppEventHandlers:
     """Test event handler functionality."""
 
-    def test_message_handler_registration(self, whatsapp_router, app_with_whatsapp):
-        """Test that message handlers can be registered and called."""
+    def test_message_handler_registration_decorator(self, whatsapp_router, app_with_whatsapp):
+        """Test that message handlers can be registered via decorators and called."""
         received_messages = []
 
         @whatsapp_router.on_message
@@ -167,6 +180,47 @@ class TestWhatsAppEventHandlers:
             received_messages.append(message)
 
         client = TestClient(app_with_whatsapp)
+
+        webhook_payload = {
+            "object": "whatsapp_business_account",
+            "entry": [
+                {
+                    "id": "entry_id",
+                    "changes": [
+                        {
+                            "field": "messages",
+                            "value": {
+                                "messages": [
+                                    {
+                                        "from": "user_wa_id",
+                                        "id": "message_id",
+                                        "text": {"body": "Test message"},
+                                        "type": "text"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+
+        response = client.post("/webhook/", json=webhook_payload)
+        assert response.status_code == 200
+        assert len(received_messages) == 1
+        assert received_messages[0]["text"]["body"] == "Test message"
+
+    def test_message_handler_registration_constructor(self, test_config):
+        """Test that message handlers can be registered via constructor and called."""
+        received_messages = []
+
+        def handle_message(message: dict[str, Any]) -> None:
+            received_messages.append(message)
+
+        router = WhatsApp(config=test_config, on_message=handle_message)
+        app = FastAPI()
+        app.include_router(router)
+        client = TestClient(app)
 
         webhook_payload = {
             "object": "whatsapp_business_account",
@@ -285,7 +339,14 @@ class TestWhatsAppConfiguration:
 
     def test_custom_prefix(self):
         """Test router with custom prefix."""
-        router = WhatsApp(verify_token="test", prefix="/custom")
+        config = WhatsAppConfig(
+            whatsapp_phone_id="test_phone",
+            whatsapp_token="test_token",
+            whatsapp_verify_token="test",
+            whatsapp_app_id="test_app",
+            whatsapp_app_secret="test_secret"
+        )
+        router = WhatsApp(config=config, prefix="/custom")
         app = FastAPI()
         app.include_router(router)
         client = TestClient(app)
@@ -300,10 +361,82 @@ class TestWhatsAppConfiguration:
         )
         assert response.status_code == 200
 
+    def test_include_router_with_path(self):
+        """Test the API usage pattern from the comment."""
+        received_messages = []
+
+        def my_handler(message: dict[str, Any]) -> None:
+            received_messages.append(message)
+
+        # Test the exact usage pattern from the comment
+        config = WhatsAppConfig(
+            whatsapp_phone_id="test_phone",
+            whatsapp_token="test_token",
+            whatsapp_verify_token="test_token",
+            whatsapp_app_id="test_app",
+            whatsapp_app_secret="test_secret"
+        )
+        whatsapp = WhatsApp(
+            config=config,
+            on_message=my_handler,
+            prefix=""  # No prefix since we're setting it at include_router level
+        )
+
+        app = FastAPI()
+        app.include_router(router=whatsapp, prefix="/webhook/whatsapp")
+        client = TestClient(app)
+
+        # Test that the webhook verification works at the new path
+        response = client.get(
+            "/webhook/whatsapp/",
+            params={
+                "hub.mode": "subscribe",
+                "hub.challenge": "test_challenge",
+                "hub.verify_token": "test_token",
+            }
+        )
+        assert response.status_code == 200
+
+        # Test that messages are processed
+        webhook_payload = {
+            "object": "whatsapp_business_account",
+            "entry": [
+                {
+                    "id": "entry_id",
+                    "changes": [
+                        {
+                            "field": "messages",
+                            "value": {
+                                "messages": [
+                                    {
+                                        "from": "user_wa_id",
+                                        "id": "message_id",
+                                        "text": {"body": "Test message"},
+                                        "type": "text"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+
+        response = client.post("/webhook/whatsapp/", json=webhook_payload)
+        assert response.status_code == 200
+        assert len(received_messages) == 1
+
     def test_router_kwargs(self):
         """Test passing additional router kwargs."""
+        config = WhatsAppConfig(
+            whatsapp_phone_id="test_phone",
+            whatsapp_token="test_token",
+            whatsapp_verify_token="test",
+            whatsapp_app_id="test_app",
+            whatsapp_app_secret="test_secret"
+        )
         router = WhatsApp(
-            verify_token="test",
+            config=config,
             tags=["whatsapp"],
             dependencies=[]
         )
@@ -311,15 +444,47 @@ class TestWhatsAppConfiguration:
 
     def test_config_properties(self):
         """Test that config is properly set."""
+        config = WhatsAppConfig(
+            whatsapp_phone_id="test_phone",
+            whatsapp_token="test_token",
+            whatsapp_verify_token="test_verify_token",
+            whatsapp_app_id="test_app",
+            whatsapp_app_secret="test_secret"
+        )
         router = WhatsApp(
-            verify_token="test_token",
-            webhook_secret="test_secret",
+            config=config,
             prefix="/custom"
         )
 
-        assert router.config.verify_token == "test_token"
-        assert router.config.webhook_secret == "test_secret"
-        assert router.config.prefix == "/custom"
+        assert router.config.whatsapp_phone_id == "test_phone"
+        assert router.config.whatsapp_token == "test_token"
+        assert router.config.whatsapp_verify_token == "test_verify_token"
+        assert router.config.whatsapp_app_id == "test_app"
+        assert router.config.whatsapp_app_secret == "test_secret"
+
+    def test_config_from_environment(self):
+        """Test that config can be loaded from environment variables."""
+        # Set environment variables
+        os.environ["WHATSAPP_PHONE_ID"] = "env_phone"
+        os.environ["WHATSAPP_TOKEN"] = "env_token"
+        os.environ["WHATSAPP_VERIFY_TOKEN"] = "env_verify"
+        os.environ["WHATSAPP_APP_ID"] = "env_app"
+        os.environ["WHATSAPP_APP_SECRET"] = "env_secret"
+
+        try:
+            # Create router without explicit config (should load from env)
+            router = WhatsApp()
+
+            assert router.config.whatsapp_phone_id == "env_phone"
+            assert router.config.whatsapp_token == "env_token"
+            assert router.config.whatsapp_verify_token == "env_verify"
+            assert router.config.whatsapp_app_id == "env_app"
+            assert router.config.whatsapp_app_secret == "env_secret"
+        finally:
+            # Clean up environment variables
+            for key in ["WHATSAPP_PHONE_ID", "WHATSAPP_TOKEN", "WHATSAPP_VERIFY_TOKEN",
+                       "WHATSAPP_APP_ID", "WHATSAPP_APP_SECRET"]:
+                os.environ.pop(key, None)
 
 
 class TestWhatsAppErrorHandling:

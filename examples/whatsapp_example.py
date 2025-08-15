@@ -1,19 +1,11 @@
 """Example usage of the WhatsApp webhook router."""
 
 from fastapi import FastAPI
-from overzetten import WhatsApp
+from overzetten.whatsapp import WhatsApp
 
 app = FastAPI(title="WhatsApp Webhook Example")
 
-# Create WhatsApp webhook router
-whatsapp = WhatsApp(
-    verify_token="your_verify_token_here",
-    webhook_secret="your_webhook_secret_here",  # optional
-    prefix="/whatsapp"
-)
 
-# Register event handlers using decorators
-@whatsapp.on_message
 def handle_message(message: dict) -> None:
     """Handle incoming WhatsApp messages."""
     message_type = message.get("type")
@@ -36,7 +28,7 @@ def handle_message(message: dict) -> None:
     else:
         print(f"Received {message_type} message from {sender}")
 
-@whatsapp.on_status_update
+
 def handle_status(status: dict) -> None:
     """Handle message status updates."""
     message_id = status["id"]
@@ -44,6 +36,14 @@ def handle_status(status: dict) -> None:
     recipient = status.get("recipient_id")
     
     print(f"Message {message_id} to {recipient}: {status_type}")
+
+
+# Create WhatsApp webhook router with handler functions
+whatsapp = WhatsApp(
+    on_message=handle_message,
+    on_status_update=handle_status,
+    prefix="/whatsapp"
+)
 
 # Include the router in the app
 app.include_router(whatsapp)

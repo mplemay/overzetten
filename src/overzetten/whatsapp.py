@@ -5,14 +5,19 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 
 
-class WhatsAppConfig(BaseModel):
+class WhatsAppConfig(BaseSettings):
     """Configuration for WhatsApp webhook."""
 
-    verify_token: str
-    webhook_secret: str | None = None
-    prefix: str = "/webhook"
+    whatsapp_phone_id: str
+    whatsapp_token: str
+    whatsapp_verify_token: str
+    whatsapp_app_id: str
+    whatsapp_app_secret: str
+
+    model_config = {"env_file": ".env"}
 
 
 class WhatsAppMessage(BaseModel):
@@ -27,8 +32,9 @@ class WhatsApp(APIRouter):
 
     def __init__(
         self,
-        verify_token: str,
-        webhook_secret: str | None = None,
+        config: WhatsAppConfig | None = None,
+        on_message: Callable[[dict[str, Any]], None] | None = None,
+        on_status_update: Callable[[dict[str, Any]], None] | None = None,
         prefix: str = "/webhook",
         **router_kwargs: Any,  # noqa: ANN401
     ) -> None:
@@ -36,22 +42,25 @@ class WhatsApp(APIRouter):
         Initialize WhatsApp webhook router.
 
         Args:
-            verify_token: Token for webhook verification
-            webhook_secret: Optional secret for webhook signature verification
+            config: WhatsApp configuration (defaults to loading from environment)
+            on_message: Handler function for incoming messages
+            on_status_update: Handler function for status updates
             prefix: URL prefix for webhook endpoints
             **router_kwargs: Additional arguments passed to APIRouter
         """
         super().__init__(prefix=prefix, **router_kwargs)
 
-        self.config = WhatsAppConfig(
-            verify_token=verify_token,
-            webhook_secret=webhook_secret,
-            prefix=prefix,
-        )
+        self.config = config or WhatsAppConfig()
 
         # Event handlers storage
         self._message_handlers: list[Callable[[dict[str, Any]], None]] = []
         self._status_handlers: list[Callable[[dict[str, Any]], None]] = []
+
+        # Add provided handlers
+        if on_message:
+            self._message_handlers.append(on_message)
+        if on_status_update:
+            self._status_handlers.append(on_status_update)
 
         # Setup default routes
         self._setup_routes()
@@ -66,7 +75,7 @@ class WhatsApp(APIRouter):
             hub_verify_token: str = Query(..., alias="hub.verify_token"),
         ) -> str:
             """Verify webhook subscription."""
-            if hub_mode == "subscribe" and hub_verify_token == self.config.verify_token:
+            if hub_mode == "subscribe" and hub_verify_token == self.config.whatsapp_verify_token:
                 return hub_challenge
             raise HTTPException(status_code=403, detail="Forbidden")
 
